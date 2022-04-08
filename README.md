@@ -1,6 +1,6 @@
 # Transient Labs Smart Contract Kit
 
-This repository is meant to serve as an inheritable library of smart contracts.
+This repository is meant to serve as an inheritable library of smart contracts. Will eventually migrate to typescript.
 
 ## Contracts
 ### Royalty
