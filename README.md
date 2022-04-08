@@ -1,15 +1,19 @@
-# Basic Sample Hardhat Project
+# Transient Labs Smart Contract Kit
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts.
+This repository is meant to serve as an inheritable library of smart contracts.
 
-Try running some of the following tasks:
+## Contracts
+### Royalty
+These contracts follow EIP-2981 for on chain royalty information.
 
-```shell
-npx hardhat accounts
-npx hardhat compile
-npx hardhat clean
-npx hardhat test
-npx hardhat node
-node scripts/sample-script.js
-npx hardhat help
-```
+### token
+These contracts are generally the core, reusable, inheritable ERC 721 and ERC 1155 contracts that TL uses
+
+### vulnerabilityTest
+These contracts are used to test vulnerabilities in the test suite
+
+## Test
+These are the tests that the contracts pass. All tests must pass before committing.
+
+## License
+All code is licensed per the LICENSE file.
