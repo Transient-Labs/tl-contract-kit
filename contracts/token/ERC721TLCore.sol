@@ -204,7 +204,7 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     *   @dev requires owner
     *   @param newAdmin is the new admin address
     */
-    function setNewAdmin(address newAdmin) external virtual onlyOwner {
+    function setAdminAddress(address newAdmin) external virtual onlyOwner {
         require(newAdmin != address(0), "ERC721TLCore: New admin cannot be the zero address");
         adminAddress = newAdmin;
     }

@@ -170,6 +170,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param newRecipient is the new royalty recipient
     */
     function setRoyaltyRecipient(uint256 tokenId, address newRecipient) external virtual adminOrOwner {
+        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
         setRoyaltyInfo(tokenId, newRecipient, royaltyPerc[tokenId]);
     }
 
@@ -181,6 +182,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param newPerc is the new royalty percentage, in basis points (out of 10,000)
     */
     function setRoyaltyPercentage(uint256 tokenId, uint256 newPerc) external virtual adminOrOwner {
+        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
         setRoyaltyInfo(tokenId, royaltyAddr[tokenId], newPerc);
     }
 
@@ -192,7 +194,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param addresses is an array of addresses to mint to
     */
     function airdrop(uint256 tokenId, address[] calldata addresses) external virtual adminOrOwner {
-        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token not created");
+        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
         require(tokenDetails[tokenId].availableSupply >= addresses.length, "ERC1155TLCore: Not enough token supply available");
 
         tokenDetails[tokenId].availableSupply -= uint64(addresses.length);
@@ -210,7 +212,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param numToMint is the number to mint
     */
     function ownerMint(uint256 tokenId, uint256 numToMint) external virtual adminOrOwner {
-        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token not created");
+        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
         require(tokenDetails[tokenId].availableSupply >= numToMint, "ERC1155TLCore: Not enough token supply available");
 
         tokenDetails[tokenId].availableSupply -= uint64(numToMint);
@@ -219,11 +221,19 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     }
 
     /**
+    *   @notice function to withdraw ether from the contract
+    *   @dev requires admin or owner
+    */
+    function withdrawEther() external virtual adminOrOwner {
+        payoutAddress.transfer(address(this).balance);
+    }
+
+    /**
     *   @notice function to set the admin address on the contract
     *   @dev requires owner
     *   @param newAdmin is the new admin address
     */
-    function setNewAdmin(address newAdmin) external virtual onlyOwner {
+    function setAdminAddress(address newAdmin) external virtual onlyOwner {
         require(newAdmin != address(0), "ERC1155TLCore: New admin cannot be the zero address");
         adminAddress = newAdmin;
     }
@@ -247,7 +257,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     */
     function mint(uint256 tokenId, uint16 numToMint, bytes32[] calldata merkleProof) external virtual payable {
         TokenDetails storage token = tokenDetails[tokenId];
-
+        require(token.created, "ERC1155TLCore: Token ID not valid");
         require(token.availableSupply >= numToMint, "ERC1155TLCore: Not enough token supply available");
         require(token.mintStatus == true, "ERC1155TLCore: Mint not open");
         require(msg.value >= token.price*uint256(numToMint), "ERC1155TLCore: Not enough ether attached to the transaction");
@@ -261,14 +271,6 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
         token.availableSupply -= uint64(numToMint);
 
         _mint(msg.sender, tokenId, uint256(numToMint), "");
-    }
-
-    /**
-    *   @notice function to withdraw ether from the contract
-    *   @dev requires admin or owner
-    */
-    function withdrawEther() external virtual adminOrOwner {
-        payoutAddress.transfer(address(this).balance);
     }
 
     /**
