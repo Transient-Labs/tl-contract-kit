@@ -54,7 +54,7 @@ describe("ERC-1155 TL Core", function() {
             merkleProofs3.push(merkleTree3.getHexProof(keccak256(addr)));
         });
 
-        token1 = [0, 20, false, 1, 0, "test1/", ethers.utils.formatBytes32String(""), royaltyRecp1.address, 500];
+        token1 = [0, 30, false, 1, 0, "test1/", ethers.utils.formatBytes32String(""), royaltyRecp1.address, 500];
         token2 = [1, 30, false, 1, ethers.utils.parseEther("1"), "test2/", merkleRoot2, royaltyRecp2.address, 750];
         token3 = [2, 40, false, 1, ethers.utils.parseEther("0.5"), "test3/", merkleRoot3, royaltyRecp3.address, 1000];
         token4 = [3, 20, false, 1, 0, "test4/", ethers.utils.formatBytes32String(""), royaltyRecp4.address, 1250];
@@ -148,10 +148,6 @@ describe("ERC-1155 TL Core", function() {
             ).to.be.revertedWith(revertStr);
 
             await expect(
-                contract.connect(a[10]).setTokenSupply(0, 100)
-            ).to.be.revertedWith(revertStr);
-
-            await expect(
                 contract.connect(a[10]).setMintAllowance(0, 2)
             ).to.be.revertedWith(revertStr);
 
@@ -165,14 +161,6 @@ describe("ERC-1155 TL Core", function() {
 
             await expect(
                 contract.connect(a[10]).setMintStatus(0, true)
-            ).to.be.revertedWith(revertStr);
-
-            await expect(
-                contract.connect(a[10]).setTokenPrice(0, 0)
-            ).to.be.revertedWith(revertStr);
-
-            await expect(
-                contract.connect(a[10]).setMerkleRoot(0, ethers.utils.formatBytes32String(""))
             ).to.be.revertedWith(revertStr);
 
             await expect(
@@ -228,8 +216,6 @@ describe("ERC-1155 TL Core", function() {
         });
 
         it("Should allow admin to execute", async function() {
-            await contract.connect(admin).setTokenSupply(0, 30);
-            expect(await contract.getTokenSupply(0)).to.equal(30);
 
             await contract.connect(admin).setMintAllowance(1, 2);
             expect(await contract.getMintAllowance(1)).to.equal(2);
@@ -240,12 +226,6 @@ describe("ERC-1155 TL Core", function() {
             await contract.connect(admin).setMintStatus(1, true);
             expect(await contract.getMintStatus(1)).to.be.true;
 
-            await contract.connect(admin).setTokenPrice(0, ethers.utils.parseEther("1"));
-            expect(await contract.getTokenPrice(0)).to.equal(ethers.utils.parseEther("1"));
-
-            await contract.connect(admin).setMerkleRoot(0, ethers.utils.formatBytes32String("1"));
-            expect(await contract.getMerkleRoot(0)).to.equal(ethers.utils.formatBytes32String("1"));
-
             await contract.connect(admin).setRoyaltyRecipient(0, royaltyRecp2.address);
             await contract.connect(admin).setRoyaltyPercentage(0, 1000);
             let recp, amt;
@@ -255,8 +235,6 @@ describe("ERC-1155 TL Core", function() {
         });
 
         it("Should allow owner to execute", async function() {
-            await contract.setTokenSupply(1, 15);
-            expect(await contract.getTokenSupply(1)).to.equal(15);
 
             await contract.setMintAllowance(2, 2);
             expect(await contract.getMintAllowance(2)).to.equal(2);
@@ -266,12 +244,6 @@ describe("ERC-1155 TL Core", function() {
 
             await contract.setMintStatus(1, false);
             expect(await contract.getMintStatus(1)).to.be.false;
-
-            await contract.setTokenPrice(0, ethers.utils.parseEther("0.5"));
-            expect(await contract.getTokenPrice(0)).to.equal(ethers.utils.parseEther("0.5"));
-
-            await contract.setMerkleRoot(0, ethers.utils.formatBytes32String("2"));
-            expect(await contract.getMerkleRoot(0)).to.equal(ethers.utils.formatBytes32String("2"));
 
             await contract.setRoyaltyRecipient(0, royaltyRecp1.address);
             await contract.setRoyaltyPercentage(0, 500);
@@ -456,9 +428,6 @@ describe("ERC-1155 TL Core", function() {
 
     describe("Invalid Token", async function() {
         it("Should revert for a token that hasn't been created", async function() {
-            await expect(
-                contract.setTokenSupply(5, 1)
-            ).to.be.revertedWith("ERC1155TLCore: Token ID not valid");
 
             await expect(
                 contract.setMintAllowance(5, 1)
@@ -474,14 +443,6 @@ describe("ERC-1155 TL Core", function() {
 
             await expect(
                 contract.setMintStatus(5, true)
-            ).to.be.revertedWith("ERC1155TLCore: Token ID not valid");
-
-            await expect(
-                contract.setTokenPrice(5, 1)
-            ).to.be.revertedWith("ERC1155TLCore: Token ID not valid");
-
-            await expect(
-                contract.setMerkleRoot(5, ethers.utils.formatBytes32String("0"))
             ).to.be.revertedWith("ERC1155TLCore: Token ID not valid");
 
             await expect(

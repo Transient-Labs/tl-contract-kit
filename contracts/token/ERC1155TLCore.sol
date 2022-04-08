@@ -84,17 +84,6 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     }
 
     /**
-    *   @notice function to set available supply for a certain token
-    *   @dev requires admin or owner
-    *   @param tokenId is the token id
-    *   @param supply is the new available supply for that token
-    */
-    function setTokenSupply(uint256 tokenId, uint64 supply) external virtual adminOrOwner {
-        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
-        tokenDetails[tokenId].availableSupply = supply;
-    }
-
-    /**
     *   @notice function to set mint allowance for a token
     *   @dev requires admin or owner
     *   @param tokenId is the token id
@@ -138,28 +127,6 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     function setMintStatus(uint256 tokenId, bool status) external virtual adminOrOwner {
         require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
         tokenDetails[tokenId].mintStatus = status;
-    }
-
-    /**
-    *   @notice set token price
-    *   @dev requires admin or owner
-    *   @param tokenId is the token id
-    *   @param price is the new price
-    */
-    function setTokenPrice(uint256 tokenId, uint256 price) external virtual adminOrOwner {
-        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
-        tokenDetails[tokenId].price = price;
-    }
-
-    /**
-    *   @notice set token merkle root
-    *   @dev requires admin or owner
-    *   @param tokenId is the token id
-    *   @param root is the new merkle root
-    */
-    function setMerkleRoot(uint256 tokenId, bytes32 root) external virtual adminOrOwner {
-        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
-        tokenDetails[tokenId].merkleRoot = root;
     }
 
     /**
