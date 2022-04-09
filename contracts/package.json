@@ -1,0 +1,28 @@
+{
+    "name": "@transient-labs/contracts",
+    "version": "0.1.0",
+    "author": "Transient Labs, LLC",
+    "license": "MIT",
+    "description": "Transient Labs base smart contracts.",
+    "dependencies": {
+        "@openzeppelin/contracts": "^4.5.0"
+    },
+    "files": [
+        "**/*.sol"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Transient-Labs/tl-contract-kit.git"
+    },
+    "keywords": [
+        "solidity",
+        "ethereum",
+        "smart",
+        "contracts",
+        "nft",
+        "transient",
+        "labs"
+    ],
+    "bugs": "https://github.com/Transient-Labs/tl-contract-kit/issues",
+    "homepage": "transientlabs.xyz"
+}
