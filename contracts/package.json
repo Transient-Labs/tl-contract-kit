@@ -12,7 +12,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/Transient-Labs/tl-contract-kit.git"
+        "url": "git+https://github.com/Transient-Labs/tl-contract-kit.git"
     },
     "keywords": [
         "solidity",
@@ -23,6 +23,8 @@
         "transient",
         "labs"
     ],
-    "bugs": "https://github.com/Transient-Labs/tl-contract-kit/issues",
-    "homepage": "transientlabs.xyz"
+    "bugs": {
+        "url": "https://github.com/Transient-Labs/tl-contract-kit/issues"
+    },
+    "homepage": "http://transientlabs.xyz"
 }
