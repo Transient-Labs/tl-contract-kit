@@ -1,4 +1,9 @@
-node_modules/
-artifacts/
-cache/
+__pycache__
+.pytest_cache
 .env
+.secret*
+.history
+.hypothesis/
+build/
+reports/
+node_modules/

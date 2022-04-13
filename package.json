@@ -1,23 +1,26 @@
 {
   "name": "tl-contract-kit",
-  "version": "0.1.0",
-  "description": "Transient Labs base smart contracts, utlities, and tools.",
-  "scripts": {
-    "test": "hardhat test"
+  "version": "1.0.0",
+  "description": "This repository is meant to serve as an inheritable library of smart contracts. Development uses the eth-brownie framework (https://github.com/eth-brownie/brownie)",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
   },
-  "author": "Transient Labs, LLC",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Transient-Labs/tl-contract-kit.git"
+  },
+  "author": "transient labs",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Transient-Labs/tl-contract-kit/issues"
+  },
+  "homepage": "https://github.com/Transient-Labs/tl-contract-kit#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^4.5.0",
-    "hardhat": "^2.9.3",
     "keccak256": "^1.0.6",
     "merkletreejs": "^0.2.31"
-  },
-  "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.0.5",
-    "@nomiclabs/hardhat-waffle": "^2.0.3",
-    "chai": "^4.3.6",
-    "ethereum-waffle": "^3.4.4",
-    "ethers": "^5.6.2"
   }
 }

@@ -3,7 +3,7 @@
 /**
 *   @title ERC-1155 TL Core
 *   @notice ERC-1155 contract with owner/admin roles, merkle claim, airdrops, and owner mint functionality
-*   @author Transient Labs, LLC
+*   @author Transient Labs
 */
 
 /*
