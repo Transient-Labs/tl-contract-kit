@@ -1,6 +1,6 @@
 {
     "name": "@transient-labs/contracts",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "author": "Transient Labs, LLC",
     "license": "MIT",
     "description": "Transient Labs base smart contracts.",
