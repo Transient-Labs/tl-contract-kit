@@ -222,11 +222,11 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     /**
     *   @notice burn function for owners to use at their discretion
     *   @dev requires the msg sender to be the owner or an approved delegate
-    *   @param _tokenId is the token ID to burn
+    *   @param tokenId is the token ID to burn
     */
-    function burn(uint256 _tokenId) public virtual {
-        require(_isApprovedOrOwner(msg.sender, _tokenId), "Burn: Not Approved or Owner");
-        _burn(_tokenId);
+    function burn(uint256 tokenId) public virtual {
+        require(_isApprovedOrOwner(msg.sender, tokenId), "Burn: Not Approved or Owner");
+        _burn(tokenId);
     }
 
     /**
