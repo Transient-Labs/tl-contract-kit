@@ -47,6 +47,11 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
         _;
     }
 
+    modifier isEOA {
+        require(msg.sender == tx.origin, "ERC1155TLCore: Function must be called by an EOA");
+        _;
+    }
+
     /**
     *   @param admin is the admin address
     *   @param payout is the payout address
@@ -222,7 +227,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param numToMint is the amount to mint
     *   @param merkleProof is the has for merkle proof verification
     */
-    function mint(uint256 tokenId, uint16 numToMint, bytes32[] calldata merkleProof) external virtual payable {
+    function mint(uint256 tokenId, uint16 numToMint, bytes32[] calldata merkleProof) external virtual payable isEOA {
         TokenDetails storage token = tokenDetails[tokenId];
         require(token.created, "ERC1155TLCore: Token ID not valid");
         require(token.availableSupply >= numToMint, "ERC1155TLCore: Not enough token supply available");

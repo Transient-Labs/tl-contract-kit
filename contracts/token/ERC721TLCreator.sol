@@ -22,7 +22,7 @@ import "../royalty/EIP2981AllToken.sol";
 
 contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
 
-    uint256 internal _tokenId;
+    uint256 internal nextTokenId;
     address public adminAddress;
     mapping(uint256 => string) internal tokenURIs;
 
@@ -42,7 +42,7 @@ contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
         address royaltyRecipient, uint256 royaltyPercentage, address admin)
         ERC721(name, symbol) EIP2981AllToken(royaltyRecipient, royaltyPercentage) Ownable() {
             adminAddress = admin;
-            _tokenId++;
+            nextTokenId++;
     }
 
     /**
@@ -62,12 +62,13 @@ contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
     /**
     *   @notice function for minting new token to the owner's address
     *   @dev requires owner or admin
+    *   @dev using _mint function as owner() should always be an EOA
     *   @param uri is the token uri
     */
     function mint(string memory uri) external virtual adminOrOwner {
-        tokenURIs[_tokenId] = uri;
-        _safeMint(owner(), _tokenId);
-        _tokenId++;
+        tokenURIs[nextTokenId] = uri;
+        _mint(owner(), nextTokenId);
+        nextTokenId++;
     }
 
     /**

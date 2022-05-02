@@ -534,5 +534,5 @@ class Test_Reentrancy:
         reenter = ERC1155TLCoreMintReentrancy.deploy(contract.address, token2[4], 2, {"from": a[4]})
         a[4].transfer(reenter, "5 ether")
 
-        with brownie.reverts("ERC1155TLCore: Cannot mint more than allowed"):
+        with brownie.reverts("ERC1155TLCore: Function must be called by an EOA"):
             reenter.mintToken({"from": a[4]})

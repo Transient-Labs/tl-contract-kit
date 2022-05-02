@@ -292,11 +292,11 @@ class Test_Mint:
         assert contract.getNumMinted(a[4].address) == 2 and contract.getNumMinted(a[5].address) == 2 and contract.getNumMinted(a[6].address) == 2 \
             and contract.getNumMinted(a[7].address) == 2 and contract.getNumMinted(a[8].address) == 2 and contract.getNumMinted(a[9].address) == 2
 
-    def test_reentrancy(self, contract, admin):
+    def test_contract_interaction(self, contract, admin):
         contract.setMintAllowance(1, {"from": admin})
         reenter = ERC721TLCoreMintReentrancy.deploy(contract.address, Wei("1 ether"), {"from": a[9]})
         a[9].transfer(reenter.address, "2 ether")
-        with brownie.reverts("ERC721TLCore: Mint allowance reached"):
+        with brownie.reverts("ERC721TLCore: Function must be called by an EOA"):
             reenter.mintToken()
 
     def test_withdraw_ether(self, contract, admin, payout):
@@ -310,11 +310,6 @@ class Test_Airdrop:
     def test_airdrop(self, contract, admin):
         contract.airdrop([a[4].address, a[5].address, a[6].address], {"from": admin})
         assert contract.ownerOf(1) == a[4].address and contract.ownerOf(2) == a[5].address and contract.ownerOf(3) == a[6].address
-
-    def test_reentrancy(self, contract, admin):
-        reenter = ERC721TLCoreAirdropReentrancy.deploy(contract.address, {"from": a[9]})
-        with brownie.reverts("ERC721TLCore: Address not admin or owner"):
-            contract.airdrop([reenter.address], {"from": admin})
 
 class Test_Owner_Mint:
 
