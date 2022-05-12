@@ -16,7 +16,7 @@
 
 pragma solidity ^0.8.0;
 
-import "chiru-labs/ERC721A@3.2.0/contracts/ERC721A.sol";
+import "chiru-labs/ERC721A@3.3.0/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "../royalty/EIP2981AllToken.sol";
@@ -144,7 +144,7 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
     function airdrop(address[] calldata addresses) external virtual adminOrOwner {
         require(_currentIndex + addresses.length <= maxSupply, "ERC721ATLCore: No token supply left");
         for (uint256 i; i < addresses.length; i++) {
-            _mint(addresses[i], 1, "", false);
+            _mint(addresses[i], 1);
         }
     }
 
@@ -156,7 +156,7 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
     */
     function ownerMint(uint128 numToMint) external virtual adminOrOwner {
         require(_currentIndex + numToMint <= maxSupply, "ERC721ATLCore: No token supply left");
-        _mint(owner(), numToMint, "", false);
+        _mint(owner(), numToMint);
     }
 
     /**
@@ -188,7 +188,7 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
         }
 
         numMinted[msg.sender] += numToMint;
-        _mint(msg.sender, numToMint, "", false);
+        _mint(msg.sender, numToMint);
     }
 
     /**
@@ -209,15 +209,6 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
     function setPayoutAddress(address payoutAddr) external virtual onlyOwner {
         require(payoutAddr != address(0), "ERC721ATLCore: Payout address cannot be the zero address");
         payoutAddress = payable(payoutAddr);
-    }
-
-    /**
-    *   @notice burn function for owners to use at their discretion
-    *   @dev requires the msg sender to be the owner or an approved delegate
-    *   @param tokenId is the token ID to burn
-    */
-    function burn(uint256 tokenId) public virtual {
-        _burn(tokenId, true);
     }
 
     /**

@@ -45,7 +45,7 @@ def args(admin, payout, royaltyAddr):
 def contract(owner, args):
     return ERC721TLCore.deploy(*args, {"from": owner})
 
-class Test_Setup:
+class TestSetup:
     def test_name(self, contract, args):
         assert contract.name() == args[0]
 
@@ -74,7 +74,7 @@ class Test_Setup:
     def test_owner(self, contract, owner):
         assert contract.owner() == owner.address
 
-class Test_View_Functions:
+class TestViewFunctions:
     def test_num_minted_init(self, contract, owner):
         assert contract.getNumMinted(owner.address) == 0
 
@@ -85,7 +85,7 @@ class Test_View_Functions:
         contract.ownerMint(5, {"from": owner})
         assert contract.getRemainingSupply() == args[5] - 5
 
-class Test_Non_Owner_Or_Admin_No_Access:
+class TestNonOwnerOrAdminNoAccess:
     revertStr = "ERC721TLCore: Address not admin or owner"
 
     def test_set_allowlist_sale(self, contract):
@@ -124,7 +124,7 @@ class Test_Non_Owner_Or_Admin_No_Access:
         with brownie.reverts(self.revertStr):
             contract.withdrawEther({"from": a[4]})
 
-class Test_Non_Owner_No_Access:
+class TestNonOwnerNoAccess:
     revertStr = "Ownable: caller is not the owner"
 
     def test_set_admin_address_user(self, contract):
@@ -143,7 +143,7 @@ class Test_Non_Owner_No_Access:
         with brownie.reverts(self.revertStr):
             contract.setPayoutAddress(a[4].address, {"from": admin})
 
-class Test_Admin_Access:
+class TestAdminAccess:
     def test_set_allowlist_sale_status(self, contract, admin):
         contract.setAllowlistSaleStatus(True, {"from": admin})
         assert contract.allowlistSaleOpen()
@@ -180,7 +180,7 @@ class Test_Admin_Access:
         contract.freezeMetadata({"from": admin})
         assert contract.frozen()
 
-class Test_Owner_Access:
+class TestOwnerAccess:
     def test_set_allowlist_sale_status(self, contract, owner):
         contract.setAllowlistSaleStatus(True, {"from": owner})
         assert contract.allowlistSaleOpen()
@@ -225,7 +225,7 @@ class Test_Owner_Access:
         contract.setPayoutAddress(a[4].address, {"from": owner})
         assert contract.payoutAddress() == a[4].address
 
-class Test_Mint:
+class TestMint:
 
     def test_setup(self, contract, admin):
         contract.setMintAllowance(1, {"from": admin})
@@ -305,13 +305,13 @@ class Test_Mint:
         contract.withdrawEther({"from": admin})
         assert payout.balance() - init_balance == contract_balance
 
-class Test_Airdrop:
+class TestAirdrop:
 
     def test_airdrop(self, contract, admin):
         contract.airdrop([a[4].address, a[5].address, a[6].address], {"from": admin})
         assert contract.ownerOf(1) == a[4].address and contract.ownerOf(2) == a[5].address and contract.ownerOf(3) == a[6].address
 
-class Test_Owner_Mint:
+class TestOwnerMint:
 
     def test_owner_mint(self, contract, admin, owner):
         contract.ownerMint(5, {"from": admin})

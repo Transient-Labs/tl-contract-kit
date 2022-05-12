@@ -82,7 +82,7 @@ def token3(royaltyAddr):
 def contract(owner, admin, payout):
     return ERC1155TLCore.deploy(admin.address, payout.address, "ERC1155 Test", {"from": owner})
 
-class Test_Setup:
+class TestSetup:
     def test_name(self, contract, admin, payout):
         assert contract.name() == "ERC1155 Test"
 
@@ -92,7 +92,7 @@ class Test_Setup:
     def test_payout(self, contract, admin, payout):
         assert contract.payoutAddress() == payout.address
 
-class Test_Non_Owner_Admin_No_Access:
+class TestNonOwnerAdminNoAccess:
     revertStr = "ERC1155TLCore: Address not admin or owner"
     def test_create_token(self, contract, token0):
         with brownie.reverts(self.revertStr):
@@ -134,7 +134,7 @@ class Test_Non_Owner_Admin_No_Access:
         with brownie.reverts(self.revertStr):
             contract.withdrawEther({"from": a[4]})
 
-class Test_Non_Owner_No_Access:
+class TestNonOwnerNoAccess:
     revertStr = "Ownable: caller is not the owner"
 
     def test_set_admin_address_user(self, contract):
@@ -153,7 +153,7 @@ class Test_Non_Owner_No_Access:
         with brownie.reverts(self.revertStr):
             contract.setPayoutAddress(a[4].address, {"from": admin})
 
-class Test_Admin_Access:
+class TestAdminAccess:
     def test_create_token(self, contract, admin, token0):
         contract.createToken(*token0, {"from": admin})
         supply = contract.getTokenSupply(0)
@@ -207,7 +207,7 @@ class Test_Admin_Access:
     def test_withdraw_ether(self, contract, admin):
         contract.withdrawEther({"from": admin})
 
-class Test_Owner_Access:
+class TestOwnerAccess:
     def test_create_token(self, contract, owner, token1):
         contract.createToken(*token1, {"from": owner})
         supply = contract.getTokenSupply(1)
@@ -261,7 +261,7 @@ class Test_Owner_Access:
     def test_withdraw_ether(self, contract, owner):
         contract.withdrawEther({"from": owner})
 
-class Test_Non_Existent_Token_Id:
+class TestNonExistentTokenId:
     revertStr = "ERC1155TLCore: Token ID not valid"
 
     def test_set_mint_allowance(self, contract, admin):
@@ -300,7 +300,7 @@ class Test_Non_Existent_Token_Id:
         with brownie.reverts(self.revertStr):
             contract.mint(0, 5, [], {"from": a[4]})
 
-class Test_Token_0:
+class TestToken0:
     def test_create_token(self, contract, admin, token0):
         contract.createToken(*token0, {"from": admin})
         supply = contract.getTokenSupply(0)
@@ -338,7 +338,7 @@ class Test_Token_0:
         with brownie.reverts("ERC1155TLCore: Not enough token supply available"):
             contract.mint(0, 1, [], {"from": a[4]})
 
-class Test_Token_1:
+class TestToken1:
     def test_create_token(self, contract, admin, token1):
         contract.createToken(*token1, {"from": admin})
         supply = contract.getTokenSupply(1)
@@ -396,7 +396,7 @@ class Test_Token_1:
         with brownie.reverts("ERC1155TLCore: Not enough token supply available"):
             contract.ownerMint(1, 3, {"from": admin})
 
-class Test_Token_2:
+class TestToken2:
     def test_create_token(self, contract, admin, token2):
         contract.createToken(*token2, {"from": admin})
         supply = contract.getTokenSupply(2)
@@ -461,7 +461,7 @@ class Test_Token_2:
         contract.withdrawEther({"from": admin})
         assert payout.balance() - init_balance == contract_balance
 
-class Test_Token_3:
+class TestToken3:
     def test_create_token(self, contract, admin, token3):
         contract.createToken(*token3, {"from": admin})
         supply = contract.getTokenSupply(3)
@@ -510,7 +510,7 @@ class Test_Token_3:
         with brownie.reverts("ERC1155TLCore: Not enough token supply available"):
             contract.ownerMint(3, 3, {"from": admin})
 
-class Test_Reentrancy:
+class TestReentrancy:
     def test_create_token(self, contract, admin, token2):
         t = token2
         t[6] = Web3.toHex(b'')
