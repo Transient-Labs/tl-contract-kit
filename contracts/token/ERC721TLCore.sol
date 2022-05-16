@@ -34,7 +34,7 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     address payable public payoutAddress;
     address public adminAddress;
 
-    bytes32 public immutable allowlistMerkleRoot;
+    bytes32 public allowlistMerkleRoot;
     
     string internal baseTokenURI;
 

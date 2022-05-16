@@ -33,7 +33,7 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
     address payable public payoutAddress;
     address public adminAddress;
 
-    bytes32 public immutable allowlistMerkleRoot;
+    bytes32 public allowlistMerkleRoot;
     
     string internal baseTokenURI;
 
