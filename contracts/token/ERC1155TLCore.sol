@@ -14,11 +14,11 @@
                                         /___/                                                               
 */
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/token/ERC1155/ERC1155.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/access/Ownable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/utils/cryptography/MerkleProof.sol";
 import "../royalty/EIP2981MultiToken.sol";
 
 contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {

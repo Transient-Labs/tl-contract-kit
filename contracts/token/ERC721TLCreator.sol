@@ -14,10 +14,10 @@
                                         /___/                                                             
 */
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/token/ERC721/ERC721.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/access/Ownable.sol";
 import "../royalty/EIP2981AllToken.sol";
 
 contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {

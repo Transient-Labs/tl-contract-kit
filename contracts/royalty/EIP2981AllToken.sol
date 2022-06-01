@@ -14,9 +14,9 @@
                                         /___/                                                             
 */
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/utils/introspection/ERC165.sol";
 import "./IEIP2981.sol";
 
 contract EIP2981AllToken is IEIP2981, ERC165 {

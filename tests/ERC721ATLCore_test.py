@@ -244,7 +244,12 @@ class TestMint:
         contract.mint(1, merkleProofs[0], {"from": a[4], "value": Wei("1 ether")})
         contract.mint(1, merkleProofs[1], {"from": a[5], "value": Wei("1 ether")})
         contract.mint(1, merkleProofs[2], {"from": a[6], "value": Wei("1 ether")})
-        assert contract.ownerOf(0) == a[4].address and contract.ownerOf(1) == a[5].address and contract.ownerOf(2) == a[6].address
+        assert contract.ownerOf(1) == a[4].address and contract.ownerOf(2) == a[5].address and contract.ownerOf(3) == a[6].address
+
+    def test_transfer_and_mint_again(self, contract):
+        contract.safeTransferFrom(a[4].address, a[9].address, 1, {"from": a[4]})
+        with brownie.reverts("ERC721ATLCore: Mint allowance reached"):
+            contract.mint(1, merkleProofs[0], {"from": a[4], "value": Wei("1 ether")})
 
     def test_allowlist_mint_allowance_reached(self, contract):
         with brownie.reverts("ERC721ATLCore: Mint allowance reached"):
@@ -268,7 +273,7 @@ class TestMint:
         contract.mint(1, [], {"from": a[7], "value": Wei("1 ether")})
         contract.mint(1, [], {"from": a[8], "value": Wei("1 ether")})
         contract.mint(1, [], {"from": a[9], "value": Wei("1 ether")})
-        assert contract.ownerOf(3) == a[7].address and contract.ownerOf(4) == a[8].address and contract.ownerOf(5) == a[9].address
+        assert contract.ownerOf(4) == a[7].address and contract.ownerOf(5) == a[8].address and contract.ownerOf(6) == a[9].address
 
     def test_public_sale_mint_allowance_reached(self, contract):
         with brownie.reverts("ERC721ATLCore: Mint allowance reached"):
@@ -286,12 +291,12 @@ class TestMint:
         contract.mint(2, [], {"from": a[7], "value": Wei("2 ether")})
         contract.mint(2, [], {"from": a[8], "value": Wei("2 ether")})
         contract.mint(2, [], {"from": a[9], "value": Wei("2 ether")})
-        assert contract.ownerOf(6) == a[4].address and contract.ownerOf(7) == a[4].address \
-            and contract.ownerOf(8) == a[5].address and contract.ownerOf(9) == a[5].address \
-            and contract.ownerOf(10) == a[6].address and contract.ownerOf(11) == a[6].address \
-            and contract.ownerOf(12) == a[7].address and contract.ownerOf(13) == a[7].address \
-            and contract.ownerOf(14) == a[8].address and contract.ownerOf(15) == a[8].address \
-            and contract.ownerOf(16) == a[9].address and contract.ownerOf(17) == a[9].address
+        assert contract.ownerOf(7) == a[4].address and contract.ownerOf(8) == a[4].address \
+            and contract.ownerOf(9) == a[5].address and contract.ownerOf(10) == a[5].address \
+            and contract.ownerOf(11) == a[6].address and contract.ownerOf(12) == a[6].address \
+            and contract.ownerOf(13) == a[7].address and contract.ownerOf(14) == a[7].address \
+            and contract.ownerOf(15) == a[8].address and contract.ownerOf(16) == a[8].address \
+            and contract.ownerOf(17) == a[9].address and contract.ownerOf(18) == a[9].address
 
     def test_num_minted(self, contract):
         assert contract.getNumMinted(a[4].address) == 3 and contract.getNumMinted(a[5].address) == 3 and contract.getNumMinted(a[6].address) == 3 \
@@ -319,14 +324,14 @@ class TestAirdrop:
 
     def test_airdrop(self, contract, admin):
         contract.airdrop([a[4].address, a[5].address, a[6].address], {"from": admin})
-        assert contract.ownerOf(0) == a[4].address and contract.ownerOf(1) == a[5].address and contract.ownerOf(2) == a[6].address
+        assert contract.ownerOf(1) == a[4].address and contract.ownerOf(2) == a[5].address and contract.ownerOf(3) == a[6].address
 
 class TestOwnerMint:
 
     def test_owner_mint(self, contract, admin, owner):
         contract.ownerMint(5, {"from": admin})
-        assert contract.ownerOf(0) == owner.address and contract.ownerOf(1) == owner.address and contract.ownerOf(2) == owner.address \
-            and contract.ownerOf(3) == owner.address and contract.ownerOf(4) == owner.address
+        assert contract.ownerOf(1) == owner.address and contract.ownerOf(2) == owner.address and contract.ownerOf(3) == owner.address \
+            and contract.ownerOf(4) == owner.address and contract.ownerOf(5) == owner.address
 
 class TestTokenSupplyReached:
 

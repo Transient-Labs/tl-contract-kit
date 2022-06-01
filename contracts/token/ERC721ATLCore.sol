@@ -14,11 +14,11 @@
                                         /___/                                                             
 */
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
-import "chiru-labs/ERC721A@3.3.0/contracts/ERC721A.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "chiru-labs/ERC721A@4.0.0/contracts/ERC721A.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/access/Ownable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/utils/cryptography/MerkleProof.sol";
 import "../royalty/EIP2981AllToken.sol";
 
 contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
@@ -26,7 +26,7 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
     bool public allowlistSaleOpen;
     bool public publicSaleOpen;
     bool public frozen;
-    uint16 public mintAllowance;
+    uint256 public mintAllowance;
     uint256 public mintPrice;
     uint256 public maxSupply;
     
@@ -36,8 +36,6 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
     bytes32 public allowlistMerkleRoot;
     
     string internal baseTokenURI;
-
-    mapping(address => uint16) internal numMinted;
 
     modifier isNotFrozen {
         require(!frozen, "ERC721ATLCore: Metadata is frozen");
@@ -60,7 +58,7 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
     *   @param royaltyRecipient is the royalty recipient
     *   @param royaltyPercentage is the royalty percentage to set
     *   @param price is the mint price
-    *   @param supply is the total token supply
+    *   @param supply is the total token supply for minting
     *   @param merkleRoot is the allowlist merkle root
     *   @param admin is the admin address
     *   @param payout is the payout address
@@ -129,7 +127,7 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
     */
     function setRoyaltyInfo(address newAddr, uint256 newPerc) external virtual adminOrOwner {
         require(newAddr != address(0), "ERC721ATLCore: Cannot set royalty receipient to the zero address");
-        require(newPerc < 10000, "v: Cannot set royalty percentage above 10000");
+        require(newPerc < 10000, "ERC721ATLCore: Cannot set royalty percentage above 10000");
         royaltyAddr = newAddr;
         royaltyPerc = newPerc;
     }
@@ -142,7 +140,7 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
     *   @param addresses is an array of addresses to mint to
     */
     function airdrop(address[] calldata addresses) external virtual adminOrOwner {
-        require(_currentIndex + addresses.length <= maxSupply, "ERC721ATLCore: No token supply left");
+        require(ERC721A._nextTokenId() + addresses.length - 1 <= maxSupply, "ERC721ATLCore: No token supply left");
         for (uint256 i; i < addresses.length; i++) {
             _mint(addresses[i], 1);
         }
@@ -155,7 +153,7 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
     *   @param numToMint is the number to mint
     */
     function ownerMint(uint128 numToMint) external virtual adminOrOwner {
-        require(_currentIndex + numToMint <= maxSupply, "ERC721ATLCore: No token supply left");
+        require(ERC721A._nextTokenId() + numToMint - 1 <= maxSupply, "ERC721ATLCore: No token supply left");
         _mint(owner(), numToMint);
     }
 
@@ -175,10 +173,10 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
     *   @param numToMint is the number to mint
     *   @param merkleProof is the hash for merkle proof verification
     */
-    function mint(uint16 numToMint, bytes32[] calldata merkleProof) external virtual payable isEOA {
-        require(_currentIndex + numToMint <= maxSupply, "ERC721ATLCore: No token supply left");
+    function mint(uint256 numToMint, bytes32[] calldata merkleProof) external virtual payable isEOA {
+        require(ERC721A._nextTokenId() + numToMint - 1 <= maxSupply, "ERC721ATLCore: No token supply left");
         require(msg.value >= mintPrice * numToMint, "ERC721ATLCore: Not enough ether attached to the transaction");
-        require(numMinted[msg.sender] + numToMint <= mintAllowance, "ERC721ATLCore: Mint allowance reached");
+        require(ERC721A._numberMinted(msg.sender) + numToMint <= mintAllowance, "ERC721ATLCore: Mint allowance reached");
         if (allowlistSaleOpen) {
             bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
             require(MerkleProof.verify(merkleProof, allowlistMerkleRoot, leaf), "ERC721ATLCore: Not on allowlist");
@@ -187,7 +185,6 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
             revert("ERC721ATLCore: Mint not open");
         }
 
-        numMinted[msg.sender] += numToMint;
         _mint(msg.sender, numToMint);
     }
 
@@ -214,17 +211,17 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
     /**
     *   @notice function to get number minted
     *   @param addr address to query
-    *   @return uint16 for number minted
+    *   @return uint256 for number minted
     */
-    function getNumMinted(address addr) external view virtual returns (uint16) {
-        return numMinted[addr];
+    function getNumMinted(address addr) external view virtual returns (uint256) {
+        return ERC721A._numberMinted(addr);
     }
 
     /**
     *   @notice function to view remaining supply
     */
     function getRemainingSupply() external view virtual returns (uint256) {
-        return maxSupply - _currentIndex;
+        return maxSupply + 1 - ERC721A._nextTokenId();
     }
    
     /**
@@ -245,4 +242,11 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
         return baseTokenURI;
     }
 
+    /**
+     * @dev Returns the starting token ID. 
+     * To change the starting token ID, please override this function.
+     */
+     function _startTokenId() internal view virtual override returns (uint256) {
+        return 1;
+    }
 }
