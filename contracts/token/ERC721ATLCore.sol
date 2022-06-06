@@ -230,7 +230,7 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
     *   @return a boolean saying if this contract supports the interface or not
     */
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A, EIP2981AllToken) returns (bool) {
-        return super.supportsInterface(interfaceId);
+        return ERC721A.supportsInterface(interfaceId) || EIP2981AllToken.supportsInterface(interfaceId);
     }
 
     /**
