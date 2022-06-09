@@ -105,7 +105,7 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
     *   @dev requires admin or owner
     *   @param allowance is the new allowance
     */
-    function setMintAllowance(uint16 allowance) external virtual adminOrOwner {
+    function setMintAllowance(uint256 allowance) external virtual adminOrOwner {
         mintAllowance = allowance;
     }
 
