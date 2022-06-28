@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 /**
 *   @title EIP 2981 base contract
@@ -7,11 +7,14 @@
 */
 
 /*
-   ___                            __  __          ______                  _          __    __        __     
-  / _ \___ _    _____ _______ ___/ / / /  __ __  /_  __/______ ____  ___ (_)__ ___  / /_  / /  ___ _/ /  ___
- / ___/ _ \ |/|/ / -_) __/ -_) _  / / _ \/ // /   / / / __/ _ `/ _ \(_-</ / -_) _ \/ __/ / /__/ _ `/ _ \(_-<
-/_/   \___/__,__/\__/_/  \__/\_,_/ /_.__/\_, /   /_/ /_/  \_,_/_//_/___/_/\__/_//_/\__/ /____/\_,_/_.__/___/
-                                        /___/                                                               
+   ___       _ __   __  ___  _ ______                 __ 
+  / _ )__ __(_) /__/ / / _ \(_) _/ _/__ _______ ___  / /_
+ / _  / // / / / _  / / // / / _/ _/ -_) __/ -_) _ \/ __/
+/____/\_,_/_/_/\_,_/ /____/_/_//_/ \__/_/  \__/_//_/\__/                                                          
+ ______                  _          __    __        __     
+/_  __/______ ____  ___ (_)__ ___  / /_  / /  ___ _/ /  ___
+ / / / __/ _ `/ _ \(_-</ / -_) _ \/ __/ / /__/ _ `/ _ \(_-<
+/_/ /_/  \_,_/_//_/___/_/\__/_//_/\__/ /____/\_,_/_.__/___/ 
 */
 
 pragma solidity ^0.8.9;
@@ -19,7 +22,7 @@ pragma solidity ^0.8.9;
 import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/utils/introspection/ERC165.sol";
 import "./IEIP2981.sol";
 
-contract EIP2981MultiToken is IEIP2981, ERC165 {
+abstract contract EIP2981MultiToken is IEIP2981, ERC165 {
 
     mapping(uint256 => address) internal royaltyAddr;
     mapping(uint256 => uint256) internal royaltyPerc; // percentage in basis (out of 10,000)
@@ -46,7 +49,7 @@ contract EIP2981MultiToken is IEIP2981, ERC165 {
     *   @param _addr is the royalty payout address for this token id
     *   @param _perc is the royalty percentage (out of 10,000) to set for this token id
     */
-    function setRoyaltyInfo(uint256 _tokenId, address _addr, uint256 _perc) internal virtual {
+    function _setRoyaltyInfo(uint256 _tokenId, address _addr, uint256 _perc) internal virtual {
         require(_addr != address(0), "EIP2981MultiToken: Cannot set royalty receipient to the zero address");
         require(_perc < 10000, "EIP2981MultiToken: Cannot set royalty percentage above 10000");
         royaltyAddr[_tokenId] = _addr;

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 /**
 *   @title ERC-721 TL Creator
@@ -7,11 +7,14 @@
 */
 
 /*
-   ___                            __  ___         ______                  _         __    __       __     
-  / _ \___ _    _____ _______ ___/ / / _ )__ __  /_  _________ ____  ___ (____ ___ / /_  / / ___ _/ /  ___
- / ___/ _ | |/|/ / -_/ __/ -_/ _  / / _  / // /   / / / __/ _ `/ _ \(_-</ / -_/ _ / __/ / /_/ _ `/ _ \(_-<
-/_/   \___|__,__/\__/_/  \__/\_,_/ /____/\_, /   /_/ /_/  \_,_/_//_/___/_/\__/_//_\__/ /____\_,_/_.__/___/
-                                        /___/                                                             
+   ___       _ __   __  ___  _ ______                 __ 
+  / _ )__ __(_) /__/ / / _ \(_) _/ _/__ _______ ___  / /_
+ / _  / // / / / _  / / // / / _/ _/ -_) __/ -_) _ \/ __/
+/____/\_,_/_/_/\_,_/ /____/_/_//_/ \__/_/  \__/_//_/\__/                                                          
+ ______                  _          __    __        __     
+/_  __/______ ____  ___ (_)__ ___  / /_  / /  ___ _/ /  ___
+ / / / __/ _ `/ _ \(_-</ / -_) _ \/ __/ / /__/ _ `/ _ \(_-<
+/_/ /_/  \_,_/_//_/___/_/\__/_//_/\__/ /____/\_,_/_.__/___/ 
 */
 
 pragma solidity ^0.8.9;
@@ -40,7 +43,9 @@ contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
     */
     constructor (string memory name, string memory symbol,
         address royaltyRecipient, uint256 royaltyPercentage, address admin)
-        ERC721(name, symbol) EIP2981AllToken(royaltyRecipient, royaltyPercentage) Ownable() {
+        ERC721(name, symbol) Ownable() {
+            royaltyAddr = royaltyRecipient;
+            royaltyPerc = royaltyPercentage;
             adminAddress = admin;
             nextTokenId++;
     }

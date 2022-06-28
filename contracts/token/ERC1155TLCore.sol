@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 /**
 *   @title ERC-1155 TL Core
@@ -7,11 +7,14 @@
 */
 
 /*
-   ___                            __  __          ______                  _          __    __        __     
-  / _ \___ _    _____ _______ ___/ / / /  __ __  /_  __/______ ____  ___ (_)__ ___  / /_  / /  ___ _/ /  ___
- / ___/ _ \ |/|/ / -_) __/ -_) _  / / _ \/ // /   / / / __/ _ `/ _ \(_-</ / -_) _ \/ __/ / /__/ _ `/ _ \(_-<
-/_/   \___/__,__/\__/_/  \__/\_,_/ /_.__/\_, /   /_/ /_/  \_,_/_//_/___/_/\__/_//_/\__/ /____/\_,_/_.__/___/
-                                        /___/                                                               
+   ___       _ __   __  ___  _ ______                 __ 
+  / _ )__ __(_) /__/ / / _ \(_) _/ _/__ _______ ___  / /_
+ / _  / // / / / _  / / // / / _/ _/ -_) __/ -_) _ \/ __/
+/____/\_,_/_/_/\_,_/ /____/_/_//_/ \__/_/  \__/_//_/\__/                                                          
+ ______                  _          __    __        __     
+/_  __/______ ____  ___ (_)__ ___  / /_  / /  ___ _/ /  ___
+ / / / __/ _ `/ _ \(_-</ / -_) _ \/ __/ / /__/ _ `/ _ \(_-<
+/_/ /_/  \_,_/_//_/___/_/\__/_//_/\__/ /____/\_,_/_.__/___/ 
 */
 
 pragma solidity ^0.8.9;
@@ -57,7 +60,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param payout is the payout address
     *   @param contractName is the name of the contract
     */
-    constructor(address admin, address payout, string memory contractName) ERC1155("") EIP2981MultiToken() Ownable() {
+    constructor(address admin, address payout, string memory contractName) ERC1155("") Ownable() {
         adminAddress = admin;
         payoutAddress = payable(payout);
         name = contractName;
@@ -85,7 +88,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
         tokenDetails[tokenId].price = price;
         tokenDetails[tokenId].uri = uri_;
         tokenDetails[tokenId].merkleRoot = merkleRoot;
-        setRoyaltyInfo(tokenId, royaltyRecipient, royaltyPerc);
+        _setRoyaltyInfo(tokenId, royaltyRecipient, royaltyPerc);
     }
 
     /**
@@ -143,7 +146,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     */
     function setRoyaltyRecipient(uint256 tokenId, address newRecipient) external virtual adminOrOwner {
         require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
-        setRoyaltyInfo(tokenId, newRecipient, royaltyPerc[tokenId]);
+        _setRoyaltyInfo(tokenId, newRecipient, royaltyPerc[tokenId]);
     }
 
     /**
@@ -155,7 +158,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     */
     function setRoyaltyPercentage(uint256 tokenId, uint256 newPerc) external virtual adminOrOwner {
         require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
-        setRoyaltyInfo(tokenId, royaltyAddr[tokenId], newPerc);
+        _setRoyaltyInfo(tokenId, royaltyAddr[tokenId], newPerc);
     }
 
     /**
