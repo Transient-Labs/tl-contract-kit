@@ -17,12 +17,13 @@
 /_/ /_/  \_,_/_//_/___/_/\__/_//_/\__/ /____/\_,_/_.__/___/ 
 */
 
-pragma solidity ^0.8.9;
+pragma solidity >0.8.9 <0.9.0;
 
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/token/ERC1155/ERC1155.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/token/ERC20/IERC20.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/access/Ownable.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/utils/cryptography/MerkleProof.sol";
-import "../royalty/EIP2981MultiToken.sol";
+import "../../royalty/EIP2981MultiToken.sol";
 
 contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
 
@@ -210,11 +211,27 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     }
 
     /**
+    *   @notice function to withdraw ERC20 tokens from the contract
+    *   @dev requires admin or owner
+    *   @dev requires payout address to be abel to receive ERC20 tokens
+    *   @param tokenAddress is the ERC20 contract address
+    *   @param amount is the amount to withdraw
+    */
+    function withdrawERC20(address tokenAddress, uint256 amount) external virtual adminOrOwner {
+        IERC20 erc20 = IERC20(tokenAddress);
+        require(amount <= erc20.balanceOf(address(this)), "ERC721ATLCore: cannot withdraw more than balance");
+        erc20.transfer(payoutAddress, amount);
+    }
+
+    /**
     *   @notice function to withdraw ether from the contract
     *   @dev requires admin or owner
+    *   @dev recipient MUST be an EOA or contract that does not require more than 2300 gas
+    *   @param amount is the amount to withdraw
     */
-    function withdrawEther() external virtual adminOrOwner {
-        payoutAddress.transfer(address(this).balance);
+    function withdrawEther(uint256 amount) external virtual adminOrOwner {
+        require(amount <= address(this).balance, "ERC721ATLCore: cannot withdraw more than balance");
+        payoutAddress.transfer(amount);
     }
 
     /**

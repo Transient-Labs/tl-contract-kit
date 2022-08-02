@@ -2,7 +2,6 @@
 
 /**
 *   @title ERC-721 TL Core
-*   @notice ERC-721 contract with owner and admin, merkle claim allowlist, public minting, airdrop, and owner minting
 *   @author transientlabs.xyz
 */
 
@@ -17,12 +16,13 @@
 /_/ /_/  \_,_/_//_/___/_/\__/_//_/\__/ /____/\_,_/_.__/___/ 
 */
 
-pragma solidity ^0.8.9;
+pragma solidity >0.8.9 <0.9.0;
 
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/token/ERC721/ERC721.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/token/ERC20/IERC20.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/access/Ownable.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/utils/cryptography/MerkleProof.sol";
-import "../royalty/EIP2981AllToken.sol";
+import "../../royalty/EIP2981AllToken.sol";
 
 contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
 
@@ -145,66 +145,27 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     }
 
     /**
-    *   @notice function for batch minting to many addresses
-    *   @dev requires owner or admin
-    *   @dev using _mint... it is imperitive that receivers are vetted as being EOA or able to accept ERC721 tokens
-    *   @dev airdrop not subject to mint allowance constraints
-    *   @param addresses is an array of addresses to mint to
+    *   @notice function to withdraw ERC20 tokens from the contract
+    *   @dev requires admin or owner
+    *   @dev requires payout address to be abel to receive ERC20 tokens
+    *   @param tokenAddress is the ERC20 contract address
+    *   @param amount is the amount to withdraw
     */
-    function airdrop(address[] calldata addresses) external virtual adminOrOwner {
-        require(_counter + addresses.length <= maxSupply, "ERC721TLCore: No token supply left");
-
-        for (uint256 i; i < addresses.length; i++) {
-            _counter++;
-            _mint(addresses[i], _counter);
-        }
-    }
-
-    /**
-    *   @notice function for minting to the owner's address
-    *   @dev requires owner or admin
-    *   @dev not subject to mint allowance constraints
-    *   @dev using _mint as owner() should always be an EOA
-    *   @param numToMint is the number to mint
-    */
-    function ownerMint(uint128 numToMint) external virtual adminOrOwner {
-        require(_counter + numToMint <= maxSupply, "ERC721TLCore: No token supply left");
-        for (uint256 i; i < numToMint; i++) {
-            _counter++;
-            _mint(owner(), _counter);
-        }
+    function withdrawERC20(address tokenAddress, uint256 amount) external virtual adminOrOwner {
+        IERC20 erc20 = IERC20(tokenAddress);
+        require(amount <= erc20.balanceOf(address(this)), "ERC721ATLCore: cannot withdraw more than balance");
+        erc20.transfer(payoutAddress, amount);
     }
 
     /**
     *   @notice function to withdraw ether from the contract
     *   @dev requires admin or owner
+    *   @dev recipient MUST be an EOA or contract that does not require more than 2300 gas
+    *   @param amount is the amount to withdraw
     */
-    function withdrawEther() external virtual adminOrOwner {
-        payoutAddress.transfer(address(this).balance);
-    }
-
-    /**
-    *   @notice function for users to mint
-    *   @dev requires payment
-    *   @dev only mint one at a time. If looking to mint more than one at a time, utilize ERC721TLMultiMint
-    *   @dev using _mint as restricting all function calls to EOAs
-    *   @param merkleProof is the hash for merkle proof verification
-    */
-    function mint(bytes32[] calldata merkleProof) external virtual payable isEOA {
-        require(_counter < maxSupply, "ERC721TLCore: No token supply left");
-        require(msg.value >= mintPrice, "ERC721TLCore: Not enough ether attached to the transaction");
-        require(_numMinted[msg.sender] < mintAllowance, "ERC721TLCore: Mint allowance reached");
-        if (allowlistSaleOpen) {
-            bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-            require(MerkleProof.verify(merkleProof, allowlistMerkleRoot, leaf), "ERC721TLCore: Not on allowlist");
-        }
-        else if (!publicSaleOpen) {
-            revert("ERC721TLCore: Mint not open");
-        }
-
-        _numMinted[msg.sender]++;
-        _counter++;
-        _mint(msg.sender, _counter);
+    function withdrawEther(uint256 amount) external virtual adminOrOwner {
+        require(amount <= address(this).balance, "ERC721ATLCore: cannot withdraw more than balance");
+        payoutAddress.transfer(amount);
     }
 
     /**

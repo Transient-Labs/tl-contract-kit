@@ -17,11 +17,11 @@
 /_/ /_/  \_,_/_//_/___/_/\__/_//_/\__/ /____/\_,_/_.__/___/ 
 */
 
-pragma solidity ^0.8.9;
+pragma solidity >0.8.9 <0.9.0;
 
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/token/ERC721/ERC721.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/access/Ownable.sol";
-import "../royalty/EIP2981AllToken.sol";
+import "../../../royalty/EIP2981AllToken.sol";
 
 contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
 
@@ -83,9 +83,9 @@ contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
     *   @notice function to set uri for a token id
     *   @dev requires owner or admin
     */
-    function setTokenURI(uint256 tokenId, string memory tokenURI) external virtual adminOrOwner {
+    function setTokenURI(uint256 tokenId, string memory newURI) external virtual adminOrOwner {
         require(_exists(tokenId), "ERC721TLCreator: URI set of nonexistent token");
-        _tokenURIs[tokenId] = tokenURI;
+        _tokenURIs[tokenId] = newURI;
     }
 
     /**

@@ -1,4 +1,4 @@
-from brownie import ERC1155TLCore, ERC1155TLCoreMintReentrancy, ERC1155TLCoreAirdropReentrancy, a, Wei
+from brownie import ERC1155TLCore, ERC1155TLCoreMintReentrancy, ERC1155TLCoreAirdropReentrancy, ERC20TL, a, Wei
 from web3 import Web3
 import brownie
 import pytest
@@ -82,6 +82,10 @@ def token3(royaltyAddr):
 def contract(owner, admin, payout):
     return ERC1155TLCore.deploy(admin.address, payout.address, "ERC1155 Test", {"from": owner})
 
+@pytest.fixture(scope="class")
+def token(owner, contract):
+    return ERC20TL.deploy("test", "tst", contract.address, 500, {"from": owner})
+
 class TestSetup:
     def test_name(self, contract, admin, payout):
         assert contract.name() == "ERC1155 Test"
@@ -130,9 +134,13 @@ class TestNonOwnerAdminNoAccess:
         with brownie.reverts(self.revertStr):
             contract.ownerMint(0, 5, {"from": a[4]})
 
+    def test_withdraw_erc20(self, contract, token):
+        with brownie.reverts(self.revertStr):
+            contract.withdrawERC20(token.address, token.balanceOf(contract.address), {"from": a[4]})
+
     def test_withdraw_ether(self, contract):
         with brownie.reverts(self.revertStr):
-            contract.withdrawEther({"from": a[4]})
+            contract.withdrawEther(contract.balance(), {"from": a[4]})
 
 class TestNonOwnerNoAccess:
     revertStr = "Ownable: caller is not the owner"
@@ -204,8 +212,11 @@ class TestAdminAccess:
         contract.ownerMint(0, 5, {"from": admin})
         assert contract.balanceOf(owner.address, 0) == 5
 
+    def test_withdraw_erc20(self, contract, admin, token):
+        contract.withdrawERC20(token.address, token.balanceOf(contract.address), {"from": admin})
+
     def test_withdraw_ether(self, contract, admin):
-        contract.withdrawEther({"from": admin})
+        contract.withdrawEther(contract.balance(), {"from": admin})
 
 class TestOwnerAccess:
     def test_create_token(self, contract, owner, token1):
@@ -258,8 +269,11 @@ class TestOwnerAccess:
         contract.ownerMint(1, 5, {"from": owner})
         assert contract.balanceOf(owner.address, 1) == 5
 
+    def test_withdraw_erc20(self, contract, owner, token):
+        contract.withdrawERC20(token.address, token.balanceOf(contract.address), {"from": owner})
+
     def test_withdraw_ether(self, contract, owner):
-        contract.withdrawEther({"from": owner})
+        contract.withdrawEther(contract.balance(), {"from": owner})
 
 class TestNonExistentTokenId:
     revertStr = "ERC1155TLCore: Token ID not valid"
@@ -458,7 +472,7 @@ class TestToken2:
     def test_withdraw_ether(self, contract, admin, payout):
         init_balance = payout.balance()
         contract_balance = contract.balance()
-        contract.withdrawEther({"from": admin})
+        contract.withdrawEther(contract.balance(), {"from": admin})
         assert payout.balance() - init_balance == contract_balance
 
 class TestToken3:
