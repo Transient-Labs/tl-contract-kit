@@ -3,7 +3,7 @@
 /**
 *   @title ERC-721 TL Core
 *   @notice ERC-721 contract with owner and admin, merkle claim allowlist, public minting, airdrop, and owner minting
-*   @author Transient Labs
+*   @author transientlabs.xyz
 */
 
 /*
@@ -19,9 +19,9 @@
 
 pragma solidity ^0.8.9;
 
-import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/token/ERC721/ERC721.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/access/Ownable.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/utils/cryptography/MerkleProof.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/token/ERC721/ERC721.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/access/Ownable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/utils/cryptography/MerkleProof.sol";
 import "../royalty/EIP2981AllToken.sol";
 
 contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
@@ -30,18 +30,18 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     bool public publicSaleOpen;
     bool public frozen;
     uint16 public mintAllowance;
-    uint256 internal counter;
+    uint256 internal _counter;
     uint256 public mintPrice;
-    uint256 public totalSupply;
+    uint256 public maxSupply;
     
     address payable public payoutAddress;
     address public adminAddress;
 
     bytes32 public allowlistMerkleRoot;
     
-    string internal baseTokenURI;
+    string internal _baseTokenURI;
 
-    mapping(address => uint16) internal numMinted;
+    mapping(address => uint16) internal _numMinted;
 
     modifier isNotFrozen {
         require(!frozen, "ERC721TLCore: Metadata is frozen");
@@ -69,18 +69,26 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     *   @param admin is the admin address
     *   @param payout is the payout address
     */
-    constructor (string memory name, string memory symbol,
-        address royaltyRecipient, uint256 royaltyPercentage,
-        uint256 price, uint256 supply, bytes32 merkleRoot,
-        address admin, address payout)
-        ERC721(name, symbol) Ownable() {
-            royaltyAddr = royaltyRecipient;
-            royaltyPerc = royaltyPercentage;
-            mintPrice = price;
-            totalSupply = supply;
-            allowlistMerkleRoot = merkleRoot;
-            adminAddress = admin;
-            payoutAddress = payable(payout);
+    constructor (
+        string memory name,
+        string memory symbol,
+        address royaltyRecipient,
+        uint256 royaltyPercentage,
+        uint256 price,
+        uint256 supply,
+        bytes32 merkleRoot,
+        address admin,
+        address payout
+    )
+        ERC721(name, symbol) 
+        Ownable()
+        EIP2981AllToken(royaltyRecipient, royaltyPercentage)
+    {
+        mintPrice = price;
+        maxSupply = supply;
+        allowlistMerkleRoot = merkleRoot;
+        adminAddress = admin;
+        payoutAddress = payable(payout);
     }
 
     /**
@@ -122,7 +130,7 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     *   @param newURI is the base URI set for each token
     */
     function setBaseURI(string memory newURI) external virtual adminOrOwner isNotFrozen {
-        baseTokenURI = newURI;
+        _baseTokenURI = newURI;
     }
 
     /**
@@ -144,11 +152,11 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     *   @param addresses is an array of addresses to mint to
     */
     function airdrop(address[] calldata addresses) external virtual adminOrOwner {
-        require(counter + addresses.length <= totalSupply, "ERC721TLCore: No token supply left");
+        require(_counter + addresses.length <= maxSupply, "ERC721TLCore: No token supply left");
 
         for (uint256 i; i < addresses.length; i++) {
-            counter++;
-            _mint(addresses[i], counter);
+            _counter++;
+            _mint(addresses[i], _counter);
         }
     }
 
@@ -160,10 +168,10 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     *   @param numToMint is the number to mint
     */
     function ownerMint(uint128 numToMint) external virtual adminOrOwner {
-        require(counter + numToMint <= totalSupply, "ERC721TLCore: No token supply left");
+        require(_counter + numToMint <= maxSupply, "ERC721TLCore: No token supply left");
         for (uint256 i; i < numToMint; i++) {
-            counter++;
-            _mint(owner(), counter);
+            _counter++;
+            _mint(owner(), _counter);
         }
     }
 
@@ -183,9 +191,9 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     *   @param merkleProof is the hash for merkle proof verification
     */
     function mint(bytes32[] calldata merkleProof) external virtual payable isEOA {
-        require(counter < totalSupply, "ERC721TLCore: No token supply left");
+        require(_counter < maxSupply, "ERC721TLCore: No token supply left");
         require(msg.value >= mintPrice, "ERC721TLCore: Not enough ether attached to the transaction");
-        require(numMinted[msg.sender] < mintAllowance, "ERC721TLCore: Mint allowance reached");
+        require(_numMinted[msg.sender] < mintAllowance, "ERC721TLCore: Mint allowance reached");
         if (allowlistSaleOpen) {
             bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
             require(MerkleProof.verify(merkleProof, allowlistMerkleRoot, leaf), "ERC721TLCore: Not on allowlist");
@@ -194,9 +202,9 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
             revert("ERC721TLCore: Mint not open");
         }
 
-        numMinted[msg.sender]++;
-        counter++;
-        _mint(msg.sender, counter);
+        _numMinted[msg.sender]++;
+        _counter++;
+        _mint(msg.sender, _counter);
     }
 
     /**
@@ -225,14 +233,21 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     *   @return uint16 for number minted
     */
     function getNumMinted(address addr) external view virtual returns (uint16) {
-        return numMinted[addr];
+        return _numMinted[addr];
     }
 
     /**
     *   @notice function to view remaining supply
     */
     function getRemainingSupply() external view virtual returns (uint256) {
-        return totalSupply - counter;
+        return maxSupply - _counter;
+    }
+
+    /**
+    *   @notice function to return total supply (current count of NFTs minted)
+    */
+    function totalSupply() external view virtual returns (uint256) {
+        return _counter;
     }
    
     /**
@@ -250,7 +265,7 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     *   @return string representing base URI
     */
     function _baseURI() internal view override returns (string memory) {
-        return baseTokenURI;
+        return _baseTokenURI;
     }
 
 }

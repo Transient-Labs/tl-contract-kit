@@ -3,7 +3,7 @@
 /**
 *   @title ERC-1155 TL Core
 *   @notice ERC-1155 contract with owner/admin roles, merkle claim, airdrops, and owner mint functionality
-*   @author Transient Labs
+*   @author transientlabs.xyz
 */
 
 /*
@@ -19,9 +19,9 @@
 
 pragma solidity ^0.8.9;
 
-import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/token/ERC1155/ERC1155.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/access/Ownable.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/utils/cryptography/MerkleProof.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/token/ERC1155/ERC1155.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/access/Ownable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/utils/cryptography/MerkleProof.sol";
 import "../royalty/EIP2981MultiToken.sol";
 
 contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
@@ -38,7 +38,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
         mapping(address => uint16) numMinted;
     }
 
-    mapping(uint256 => TokenDetails) internal tokenDetails;
+    mapping(uint256 => TokenDetails) internal _tokenDetails;
 
     address public adminAddress;
     address payable public payoutAddress;
@@ -79,15 +79,29 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param royaltyRecipient is an address that is the royalty recipient for this token
     *   @param royaltyPerc is the percentage for royalties, in basis (out of 10,000)
     */
-    function createToken(uint256 tokenId, uint64 supply, bool mintStatus, uint16 mintAllowance, uint256 price, string memory uri_, bytes32 merkleRoot, address royaltyRecipient, uint256 royaltyPerc) external virtual adminOrOwner {
-        require(tokenDetails[tokenId].created == false, "ERC1155TLCore: Token ID already exists");
-        tokenDetails[tokenId].created = true;
-        tokenDetails[tokenId].availableSupply = supply;
-        tokenDetails[tokenId].mintAllowance = mintAllowance;
-        tokenDetails[tokenId].mintStatus = mintStatus;
-        tokenDetails[tokenId].price = price;
-        tokenDetails[tokenId].uri = uri_;
-        tokenDetails[tokenId].merkleRoot = merkleRoot;
+    function createToken(
+        uint256 tokenId,
+        uint64 supply,
+        bool mintStatus,
+        uint16 mintAllowance,
+        uint256 price,
+        string memory uri_,
+        bytes32 merkleRoot,
+        address royaltyRecipient,
+        uint256 royaltyPerc
+    )
+        external
+        virtual
+        adminOrOwner 
+    {
+        require(_tokenDetails[tokenId].created == false, "ERC1155TLCore: Token ID already exists");
+        _tokenDetails[tokenId].created = true;
+        _tokenDetails[tokenId].availableSupply = supply;
+        _tokenDetails[tokenId].mintAllowance = mintAllowance;
+        _tokenDetails[tokenId].mintStatus = mintStatus;
+        _tokenDetails[tokenId].price = price;
+        _tokenDetails[tokenId].uri = uri_;
+        _tokenDetails[tokenId].merkleRoot = merkleRoot;
         _setRoyaltyInfo(tokenId, royaltyRecipient, royaltyPerc);
     }
 
@@ -98,8 +112,8 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param allowance is the new available mint allowance for that token
     */
     function setMintAllowance(uint256 tokenId, uint16 allowance) external virtual adminOrOwner {
-        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
-        tokenDetails[tokenId].mintAllowance = allowance;
+        require(_tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
+        _tokenDetails[tokenId].mintAllowance = allowance;
     }
 
     /**
@@ -108,8 +122,8 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param tokenId is the token id
     */
     function freezeToken(uint256 tokenId) external virtual adminOrOwner {
-        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
-        tokenDetails[tokenId].frozen = true;
+        require(_tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
+        _tokenDetails[tokenId].frozen = true;
     }
 
     /**
@@ -120,9 +134,9 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param tokenId is the token id
     */
     function setURI(uint256 tokenId, string memory newURI) external virtual adminOrOwner {
-        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
-        require(!tokenDetails[tokenId].frozen, "ERC1155TLCore: Token metadata frozen");
-        tokenDetails[tokenId].uri = newURI;
+        require(_tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
+        require(!_tokenDetails[tokenId].frozen, "ERC1155TLCore: Token metadata frozen");
+        _tokenDetails[tokenId].uri = newURI;
         emit URI(newURI, tokenId);
     }
 
@@ -133,8 +147,8 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param status is the desired status
     */
     function setMintStatus(uint256 tokenId, bool status) external virtual adminOrOwner {
-        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
-        tokenDetails[tokenId].mintStatus = status;
+        require(_tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
+        _tokenDetails[tokenId].mintStatus = status;
     }
 
     /**
@@ -145,8 +159,8 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param newRecipient is the new royalty recipient
     */
     function setRoyaltyRecipient(uint256 tokenId, address newRecipient) external virtual adminOrOwner {
-        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
-        _setRoyaltyInfo(tokenId, newRecipient, royaltyPerc[tokenId]);
+        require(_tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
+        _setRoyaltyInfo(tokenId, newRecipient, _royaltyPerc[tokenId]);
     }
 
     /**
@@ -157,8 +171,8 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param newPerc is the new royalty percentage, in basis points (out of 10,000)
     */
     function setRoyaltyPercentage(uint256 tokenId, uint256 newPerc) external virtual adminOrOwner {
-        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
-        _setRoyaltyInfo(tokenId, royaltyAddr[tokenId], newPerc);
+        require(_tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
+        _setRoyaltyInfo(tokenId, _royaltyAddr[tokenId], newPerc);
     }
 
     /**
@@ -169,10 +183,10 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param addresses is an array of addresses to mint to
     */
     function airdrop(uint256 tokenId, address[] calldata addresses) external virtual adminOrOwner {
-        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
-        require(tokenDetails[tokenId].availableSupply >= addresses.length, "ERC1155TLCore: Not enough token supply available");
+        require(_tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
+        require(_tokenDetails[tokenId].availableSupply >= addresses.length, "ERC1155TLCore: Not enough token supply available");
 
-        tokenDetails[tokenId].availableSupply -= uint64(addresses.length);
+        _tokenDetails[tokenId].availableSupply -= uint64(addresses.length);
         
         for (uint256 i; i < addresses.length; i++) {
             _mint(addresses[i], tokenId, 1, "");
@@ -187,10 +201,10 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param numToMint is the number to mint
     */
     function ownerMint(uint256 tokenId, uint256 numToMint) external virtual adminOrOwner {
-        require(tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
-        require(tokenDetails[tokenId].availableSupply >= numToMint, "ERC1155TLCore: Not enough token supply available");
+        require(_tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
+        require(_tokenDetails[tokenId].availableSupply >= numToMint, "ERC1155TLCore: Not enough token supply available");
 
-        tokenDetails[tokenId].availableSupply -= uint64(numToMint);
+        _tokenDetails[tokenId].availableSupply -= uint64(numToMint);
         
         _mint(owner(), tokenId, numToMint, "");
     }
@@ -231,7 +245,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param merkleProof is the has for merkle proof verification
     */
     function mint(uint256 tokenId, uint16 numToMint, bytes32[] calldata merkleProof) external virtual payable isEOA {
-        TokenDetails storage token = tokenDetails[tokenId];
+        TokenDetails storage token = _tokenDetails[tokenId];
         require(token.created, "ERC1155TLCore: Token ID not valid");
         require(token.availableSupply >= numToMint, "ERC1155TLCore: Not enough token supply available");
         require(token.mintStatus == true, "ERC1155TLCore: Mint not open");
@@ -255,7 +269,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @return uint64 representing available supply
     */
     function getTokenSupply(uint256 tokenId) external view virtual returns(uint64) {
-        return tokenDetails[tokenId].availableSupply;
+        return _tokenDetails[tokenId].availableSupply;
     }
 
     /**
@@ -265,7 +279,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @return uint16 representing mint allowance
     */
     function getMintAllowance(uint256 tokenId) external view virtual returns(uint16) {
-        return tokenDetails[tokenId].mintAllowance;
+        return _tokenDetails[tokenId].mintAllowance;
     }
 
     /**
@@ -276,7 +290,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @return uint16 indicating number minted
     */
     function getNumMinted(uint256 tokenId, address addr) external view virtual returns (uint16) {
-        return tokenDetails[tokenId].numMinted[addr];
+        return _tokenDetails[tokenId].numMinted[addr];
     }
 
     /**
@@ -286,7 +300,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @return boolean indicating mint status
     */
     function getMintStatus(uint256 tokenId) external view virtual returns (bool) {
-        return tokenDetails[tokenId].mintStatus;
+        return _tokenDetails[tokenId].mintStatus;
     }
 
     /**
@@ -296,7 +310,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @return uint256 with price in Wei
     */
     function getTokenPrice(uint256 tokenId) external view virtual returns (uint256) {
-        return tokenDetails[tokenId].price;
+        return _tokenDetails[tokenId].price;
     }
 
     /**
@@ -306,7 +320,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @return bytes32 with merkle root
     */
     function getMerkleRoot(uint256 tokenId) external view virtual returns (bytes32) {
-        return tokenDetails[tokenId].merkleRoot;
+        return _tokenDetails[tokenId].merkleRoot;
     }
 
     /**
@@ -324,6 +338,6 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @return string representing the uri for the token id
     */
     function uri(uint256 tokenId) public view override returns (string memory) {
-        return tokenDetails[tokenId].uri;
+        return _tokenDetails[tokenId].uri;
     }   
 }

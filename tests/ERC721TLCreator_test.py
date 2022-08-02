@@ -115,7 +115,7 @@ class TestOwnerAccess:
 
 class TestReverts:
     def test_set_royalty_info(self, contract, admin):
-        with brownie.reverts("ERC721TLCreator: Cannot set royalty percentage above 10000"):
+        with brownie.reverts("EIP2981AllToken: Cannot set royalty percentage above 10000"):
             contract.setRoyaltyInfo(a[4].address, 10000, {"from": admin})
 
     def test_set_token_uri(self, contract, admin):

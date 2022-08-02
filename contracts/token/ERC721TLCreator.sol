@@ -3,7 +3,7 @@
 /**
 *   @title ERC-721 TL Creator
 *   @notice ERC-721 contract with owner and admin for execution and each token has a separate token URI. Only can mint tokens to the artist's wallet
-*   @author Transient Labs
+*   @author transientlabs.xyz
 */
 
 /*
@@ -19,15 +19,16 @@
 
 pragma solidity ^0.8.9;
 
-import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/token/ERC721/ERC721.sol";
-import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/access/Ownable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/token/ERC721/ERC721.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/access/Ownable.sol";
 import "../royalty/EIP2981AllToken.sol";
 
 contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
 
-    uint256 internal nextTokenId;
     address public adminAddress;
-    mapping(uint256 => string) internal tokenURIs;
+
+    uint256 internal _counter;
+    mapping(uint256 => string) internal _tokenURIs;
 
     modifier adminOrOwner {
         require(msg.sender == adminAddress || msg.sender == owner(), "ERC721TLCreator: Address not admin or owner");
@@ -41,13 +42,18 @@ contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
     *   @param royaltyPercentage is the royalty percentage to set
     *   @param admin is the admin address
     */
-    constructor (string memory name, string memory symbol,
-        address royaltyRecipient, uint256 royaltyPercentage, address admin)
-        ERC721(name, symbol) Ownable() {
-            royaltyAddr = royaltyRecipient;
-            royaltyPerc = royaltyPercentage;
-            adminAddress = admin;
-            nextTokenId++;
+    constructor (
+        string memory name,
+        string memory symbol,
+        address royaltyRecipient,
+        uint256 royaltyPercentage,
+        address admin
+    )
+        ERC721(name, symbol)
+        EIP2981AllToken(royaltyRecipient, royaltyPercentage)
+        Ownable()
+    {
+        adminAddress = admin;
     }
 
     /**
@@ -58,10 +64,7 @@ contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
     *   @param newPerc is the new royalty percentage, in basis points (out of 10,000)
     */
     function setRoyaltyInfo(address newAddr, uint256 newPerc) external virtual adminOrOwner {
-        require(newAddr != address(0), "ERC721TLCreator: Cannot set royalty receipient to the zero address");
-        require(newPerc < 10000, "ERC721TLCreator: Cannot set royalty percentage above 10000");
-        royaltyAddr = newAddr;
-        royaltyPerc = newPerc;
+        _setRoyaltyInfo(newAddr, newPerc);
     }
 
     /**
@@ -71,9 +74,9 @@ contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
     *   @param uri is the token uri
     */
     function mint(string memory uri) external virtual adminOrOwner {
-        tokenURIs[nextTokenId] = uri;
-        _mint(owner(), nextTokenId);
-        nextTokenId++;
+        _counter++;
+        _tokenURIs[_counter] = uri;
+        _mint(owner(), _counter);
     }
 
     /**
@@ -82,7 +85,7 @@ contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
     */
     function setTokenURI(uint256 tokenId, string memory tokenURI) external virtual adminOrOwner {
         require(_exists(tokenId), "ERC721TLCreator: URI set of nonexistent token");
-        tokenURIs[tokenId] = tokenURI;
+        _tokenURIs[tokenId] = tokenURI;
     }
 
     /**
@@ -108,11 +111,16 @@ contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
     /**
     *   @notice function to override tokenURI
     */
-    function tokenURI(uint256 tokenId) override public view returns(string memory) {
+    function tokenURI(uint256 tokenId) override public view returns (string memory) {
         require(_exists(tokenId), "ERC721TLCreator: URI query for nonexistent token");
+        return _tokenURIs[tokenId];
+    }
 
-        string memory _tokenURI = tokenURIs[tokenId];
-        return _tokenURI;
+    /**
+    *   @notice function to show current supply of NFTs minted
+    */
+    function totalSupply() external view returns (uint256) {
+        return _counter;
     }
 
     /**
@@ -121,6 +129,6 @@ contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
     *   @return a boolean saying if this contract supports the interface or not
     */
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, EIP2981AllToken) returns (bool) {
-        return super.supportsInterface(interfaceId);
+        return ERC721.supportsInterface(interfaceId) || EIP2981AllToken.supportsInterface(interfaceId);
     }
 }

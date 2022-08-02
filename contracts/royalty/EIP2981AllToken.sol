@@ -3,7 +3,7 @@
 /**
 *   @title EIP 2981 All Token
 *   @notice implementation of EIP 2981, with all tokens having the same royalty amount
-*   @author Transient Labs, LLC
+*   @author transientlabs.xyz
 */
 
 /*
@@ -19,22 +19,28 @@
 
 pragma solidity ^0.8.9;
 
-import "OpenZeppelin/openzeppelin-contracts@4.6.0/contracts/utils/introspection/ERC165.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/utils/introspection/ERC165.sol";
 import "./IEIP2981.sol";
 
 abstract contract EIP2981AllToken is IEIP2981, ERC165 {
 
-    address internal royaltyAddr;
-    uint256 internal royaltyPerc; // percentage in basis (out of 10,000)
+    address internal _royaltyAddr;
+    uint256 internal _royaltyPerc; // percentage in basis (out of 10,000)
 
-    /// No constructor here -- need to set the values above in the constructor of the inheriting contract
+    /**
+    *   @param recipient is the royalty recipient
+    *   @param percentage is the royalty percentage
+    */
+    constructor(address recipient, uint256 percentage) {
+        _setRoyaltyInfo(recipient, percentage);
+    }
     
     /**
     *   @notice EIP 2981 royalty support
     *   @dev royalty amount not dependent on _tokenId
     */
     function royaltyInfo(uint256 _tokenId, uint256 _salePrice) external view virtual override returns (address receiver, uint256 royaltyAmount) {
-        return (royaltyAddr, royaltyPerc * _salePrice / 10000);
+        return (_royaltyAddr, _royaltyPerc * _salePrice / 10000);
     }
 
     /**
@@ -48,13 +54,13 @@ abstract contract EIP2981AllToken is IEIP2981, ERC165 {
     /**
     *   @notice function to set royalty information
     *   @dev to be called by inheriting contract
-    *   @param _addr is the royalty payout address for this token id
-    *   @param _perc is the royalty percentage (out of 10,000) to set for this token id
+    *   @param addr is the royalty payout address for this token id
+    *   @param perc is the royalty percentage (out of 10,000) to set for this token id
     */
-    function _setRoyaltyInfo(address _addr, uint256 _perc) internal virtual {
-        require(_addr != address(0), "EIP2981AllToken: Cannot set royalty receipient to the zero address");
-        require(_perc < 10000, "EIP2981AllToken: Cannot set royalty percentage above 10000");
-        royaltyAddr = _addr;
-        royaltyPerc = _perc;
+    function _setRoyaltyInfo(address addr, uint256 perc) internal virtual {
+        require(addr != address(0), "EIP2981AllToken: Cannot set royalty receipient to the zero address");
+        require(perc < 10000, "EIP2981AllToken: Cannot set royalty percentage above 10000");
+        _royaltyAddr = addr;
+        _royaltyPerc = perc;
     }
 }

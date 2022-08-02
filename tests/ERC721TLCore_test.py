@@ -74,7 +74,7 @@ class TestSetup:
         assert contract.mintPrice() == args[4]
 
     def test_total_supply(self, contract, args):
-        assert contract.totalSupply() == args[5]
+        assert contract.maxSupply() == args[5]
     
     def test_merkle_root(self, contract, args):
         assert contract.allowlistMerkleRoot() == args[6]
@@ -172,11 +172,11 @@ class TestAdminAccess:
 
     def test_airdrop(self, contract, admin):
         contract.airdrop([admin.address]*2, {"from": admin})
-        assert contract.balanceOf(admin.address) == 2
+        assert contract.balanceOf(admin.address) == 2 and contract.totalSupply() == 2
 
     def test_owner_mint(self, contract, admin, owner):
         contract.ownerMint(2, {"from": admin})
-        assert contract.balanceOf(owner.address) == 2
+        assert contract.balanceOf(owner.address) == 2 and contract.totalSupply() == 4
 
     def test_set_base_uri(self, contract, admin):
         contract.setBaseURI("tests/", {"from": admin})
@@ -209,11 +209,11 @@ class TestOwnerAccess:
 
     def test_airdrop(self, contract, admin, owner):
         contract.airdrop([admin.address]*2, {"from": owner})
-        assert contract.balanceOf(admin.address) == 2
+        assert contract.balanceOf(admin.address) == 2 and contract.totalSupply() == 2
 
     def test_owner_mint(self, contract, owner):
         contract.ownerMint(2, {"from": owner})
-        assert contract.balanceOf(owner.address) == 2
+        assert contract.balanceOf(owner.address) == 2 and contract.totalSupply() == 4
 
     def test_set_base_uri(self, contract, owner):
         contract.setBaseURI("test/", {"from": owner})
