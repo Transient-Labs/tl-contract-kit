@@ -66,7 +66,7 @@ contract ERC721ATLMerkle is ERC721ATLCore {
     *   @param addresses is an array of addresses to mint to
     */
     function airdrop(address[] calldata addresses) external virtual adminOrOwner {
-        require(_nextTokenId() + addresses.length - 1 <= maxSupply, "ERC721ATLCore: No token supply left");
+        require(_totalMinted() + addresses.length <= maxSupply, "ERC721ATLCore: No token supply left");
         for (uint256 i; i < addresses.length; i++) {
             _mint(addresses[i], 1);
         }
@@ -79,7 +79,7 @@ contract ERC721ATLMerkle is ERC721ATLCore {
     *   @param numToMint is the number to mint
     */
     function ownerMint(uint128 numToMint) external virtual adminOrOwner {
-        require(_nextTokenId() + numToMint - 1 <= maxSupply, "ERC721ATLCore: No token supply left");
+        require(_totalMinted() + numToMint <= maxSupply, "ERC721ATLCore: No token supply left");
         _mint(owner(), numToMint);
     }
 
@@ -92,7 +92,7 @@ contract ERC721ATLMerkle is ERC721ATLCore {
     *   @param merkleProof is the hash for merkle proof verification
     */
     function mint(uint256 numToMint, bytes32[] calldata merkleProof) external virtual payable isEOA {
-        require(_nextTokenId() + numToMint - 1 <= maxSupply, "ERC721ATLCore: No token supply left");
+        require(_totalMinted() + numToMint <= maxSupply, "ERC721ATLCore: No token supply left");
         require(msg.value >= mintPrice * numToMint, "ERC721ATLCore: Not enough ether attached to the transaction");
         require(_numberMinted(msg.sender) + numToMint <= mintAllowance, "ERC721ATLCore: Mint allowance reached");
         if (allowlistSaleOpen) {
