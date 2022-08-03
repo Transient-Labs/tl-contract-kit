@@ -32,6 +32,20 @@ def contract(owner, args):
 def token(owner, contract):
     return ERC20TL.deploy("test", "tst", contract.address, 500, {"from": owner})
 
+class TestInterface:
+
+    def test_erc721_interface(self, contract):
+        assert contract.supportsInterface("0x80ac58cd")
+
+    def test_eip2981_interface(self, contract):
+        assert contract.supportsInterface("0x2a55205a")
+
+    def test_erc165_interface(self, contract):
+        assert contract.supportsInterface("0x01ffc9a7")
+
+    def test_erc721_metadata_interface(self, contract):
+        assert contract.supportsInterface("0x5b5e139f")
+
 class TestSetup:
     def test_name(self, contract, args):
         assert contract.name() == args[0]
