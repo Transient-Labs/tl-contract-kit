@@ -152,7 +152,7 @@ contract ERC721ATLCore is ERC721A, EIP2981AllToken, Ownable {
     function withdrawERC20(address tokenAddress, uint256 amount) external virtual adminOrOwner {
         IERC20 erc20 = IERC20(tokenAddress);
         require(amount <= erc20.balanceOf(address(this)), "ERC721ATLCore: cannot withdraw more than balance");
-        erc20.transfer(payoutAddress, amount);
+        require(erc20.transfer(payoutAddress, amount));
     }
 
     /**

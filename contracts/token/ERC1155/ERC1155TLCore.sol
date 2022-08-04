@@ -220,7 +220,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     function withdrawERC20(address tokenAddress, uint256 amount) external virtual adminOrOwner {
         IERC20 erc20 = IERC20(tokenAddress);
         require(amount <= erc20.balanceOf(address(this)), "ERC721ATLCore: cannot withdraw more than balance");
-        erc20.transfer(payoutAddress, amount);
+        require(erc20.transfer(payoutAddress, amount));
     }
 
     /**
