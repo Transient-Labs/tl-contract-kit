@@ -25,4 +25,4 @@ These are the tests that the contracts pass. All tests must pass before committi
 These are utility functions that are used in testing. Currently most are written in javascript, but there are plans to port to Python as it helps the Python ecosystem.
 
 ## License
-All code is licensed per the GPL 3.0 License.
+All code is licensed per the MIT License.
