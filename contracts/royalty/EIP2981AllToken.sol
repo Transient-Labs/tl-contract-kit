@@ -1,5 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
-
+// SPDX-License-Identifier: MIT
 /**
 *   @title EIP 2981 All Token
 *   @notice implementation of EIP 2981, with all tokens having the same royalty amount
