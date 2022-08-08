@@ -2,8 +2,6 @@ from brownie import ERC721ATLCore, ERC20TL, a, Wei
 import brownie
 import pytest
 
-merkleRoot = "0x1d8c3fe103f58db27a9a8e824b1af9ec98a7fb3434ea37750f6206c0da288903"
-
 @pytest.fixture(scope="module")
 def owner():
     return a[0]
@@ -22,7 +20,7 @@ def royaltyAddr():
 
 @pytest.fixture(scope="module")
 def args(admin, payout, royaltyAddr):
-    return ["ERC721 Test", "TL", royaltyAddr.address, 750, Wei("1 ether"), 15, merkleRoot, admin.address, payout.address]
+    return ["ERC721 Test", "TL", royaltyAddr.address, 750, 15, admin.address, payout.address]
 
 @pytest.fixture(scope="class")
 def contract(owner, args):
@@ -57,17 +55,14 @@ class TestSetup:
         [recp, amt] = contract.royaltyInfo(1, Wei("1 ether"))
         assert recp == args[2] and amt == Wei(f"{args[3]/10000} ether")
 
-    def test_mint_price(self, contract, args):
-        assert contract.mintPrice() == args[4]
-    
-    def test_merkle_root(self, contract, args):
-        assert contract.allowlistMerkleRoot() == args[6]
+    def test_max_supply(self, contract, args):
+        assert contract.maxSupply() == args[4]
     
     def test_admin(self, contract, args):
-        assert contract.adminAddress() == args[7]
+        assert contract.adminAddress() == args[5]
 
     def test_payout(self, contract, args):
-        assert contract.payoutAddress() == args[8]
+        assert contract.payoutAddress() == args[6]
 
     def test_owner(self, contract, owner):
         assert contract.owner() == owner.address
@@ -77,26 +72,14 @@ class Test_View_Functions:
         assert contract.getNumMinted(owner.address) == 0
 
     def test_remaining_supply_init(self, contract, args):
-        assert contract.getRemainingSupply() == args[5]
+        assert contract.getRemainingSupply() == args[4]
 
 class TestNonOwnerOrAdminNoAccess:
     revertStr = "ERC721ATLCore: Address not admin or owner"
-
-    def test_set_allowlist_sale(self, contract):
-        with brownie.reverts(self.revertStr):
-            contract.setAllowlistSaleStatus(True, {"from": a[4]})
-
-    def test_set_public_sale(self, contract):
-        with brownie.reverts(self.revertStr):
-            contract.setPublicSaleStatus(True, {"from": a[4]})
     
     def test_freeze_metadata(self, contract):
         with brownie.reverts(self.revertStr):
             contract.freezeMetadata({"from": a[4]})
-
-    def test_set_mint_allowance(self, contract):
-        with brownie.reverts(self.revertStr):
-            contract.setMintAllowance(2, {"from": a[4]})
 
     def test_set_base_uri(self, contract):
         with brownie.reverts(self.revertStr):
@@ -134,18 +117,6 @@ class TestNonOwnerNoAccess:
             contract.setPayoutAddress(a[4].address, {"from": admin})
 
 class TestAdminAccess:
-    def test_set_allowlist_sale_status(self, contract, admin):
-        contract.setAllowlistSaleStatus(True, {"from": admin})
-        assert contract.allowlistSaleOpen()
-
-    def test_set_public_sale_status(self, contract, admin):
-        contract.setPublicSaleStatus(True, {"from": admin})
-        assert contract.publicSaleOpen()
-
-    def test_set_mint_allowance(self, contract, admin):
-        contract.setMintAllowance(2, {"from": admin})
-        assert contract.mintAllowance() == 2
-
     def test_set_base_uri(self, contract, admin):
         contract.setBaseURI("tests/", {"from": admin})
 
@@ -165,18 +136,6 @@ class TestAdminAccess:
         assert contract.frozen()
 
 class TestOwnerAccess:
-    def test_set_allowlist_sale_status(self, contract, owner):
-        contract.setAllowlistSaleStatus(True, {"from": owner})
-        assert contract.allowlistSaleOpen()
-
-    def test_set_public_sale_status(self, contract, owner):
-        contract.setPublicSaleStatus(True, {"from": owner})
-        assert contract.publicSaleOpen()
-
-    def test_set_mint_allowance(self, contract, owner):
-        contract.setMintAllowance(2, {"from": owner})
-        assert contract.mintAllowance() == 2
-
     def test_set_base_uri(self, contract, owner):
         contract.setBaseURI("test/", {"from": owner})
 

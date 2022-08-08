@@ -23,6 +23,12 @@ import "../ERC721TLCore.sol";
 
 contract ERC721TLMerkle is ERC721TLCore {
 
+    bool public allowlistSaleOpen;
+    bool public publicSaleOpen;
+    uint256 public mintAllowance;
+    uint256 public mintPrice;
+    bytes32 public allowlistMerkleRoot;
+
     /**
     *   @param name is the name of the contract
     *   @param symbol is the symbol
@@ -50,13 +56,39 @@ contract ERC721TLMerkle is ERC721TLCore {
             symbol,
             royaltyRecipient,
             royaltyPercentage,
-            price,
             supply,
-            merkleRoot,
             admin,
             payout
         )
-    {}
+    {
+        mintPrice = price;
+        allowlistMerkleRoot = merkleRoot;
+    }
+
+     /**
+    *   @notice function to set the allowlist mint status
+    *   @param status is the true/false flag for the allowlist mint status
+    */
+    function setAllowlistSaleStatus(bool status) external virtual adminOrOwner {
+        allowlistSaleOpen = status;
+    }
+
+    /**
+    *   @notice function to set the public mint status
+    *   @param status is the true/false flag for the allowlist mint status
+    */
+    function setPublicSaleStatus(bool status) external virtual adminOrOwner {
+        publicSaleOpen = status;
+    }
+
+    /**
+    *   @notice sets the mint allowance for each address
+    *   @dev requires admin or owner
+    *   @param allowance is the new allowance
+    */
+    function setMintAllowance(uint16 allowance) external virtual adminOrOwner {
+        mintAllowance = allowance;
+    }
 
     /**
     *   @notice function for batch minting to many addresses
@@ -66,7 +98,7 @@ contract ERC721TLMerkle is ERC721TLCore {
     *   @param addresses is an array of addresses to mint to
     */
     function airdrop(address[] calldata addresses) external virtual adminOrOwner {
-        require(_counter + addresses.length <= maxSupply, "ERC721TLCore: No token supply left");
+        require(_counter + addresses.length <= maxSupply, "ERC721TLMerkle: No token supply left");
 
         for (uint256 i; i < addresses.length; i++) {
             _counter++;
@@ -82,7 +114,7 @@ contract ERC721TLMerkle is ERC721TLCore {
     *   @param numToMint is the number to mint
     */
     function ownerMint(uint128 numToMint) external virtual adminOrOwner {
-        require(_counter + numToMint <= maxSupply, "ERC721TLCore: No token supply left");
+        require(_counter + numToMint <= maxSupply, "ERC721TLMerkle: No token supply left");
         for (uint256 i; i < numToMint; i++) {
             _counter++;
             _mint(owner(), _counter);
@@ -97,15 +129,15 @@ contract ERC721TLMerkle is ERC721TLCore {
     *   @param merkleProof is the hash for merkle proof verification
     */
     function mint(bytes32[] calldata merkleProof) external virtual payable isEOA {
-        require(_counter < maxSupply, "ERC721TLCore: No token supply left");
-        require(msg.value >= mintPrice, "ERC721TLCore: Not enough ether attached to the transaction");
-        require(_numMinted[msg.sender] < mintAllowance, "ERC721TLCore: Mint allowance reached");
+        require(_counter < maxSupply, "ERC721TLMerkle: No token supply left");
+        require(msg.value >= mintPrice, "ERC721TLMerkle: Not enough ether attached to the transaction");
+        require(_numMinted[msg.sender] < mintAllowance, "ERC721TLMerkle: Mint allowance reached");
         if (allowlistSaleOpen) {
             bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-            require(MerkleProof.verify(merkleProof, allowlistMerkleRoot, leaf), "ERC721TLCore: Not on allowlist");
+            require(MerkleProof.verify(merkleProof, allowlistMerkleRoot, leaf), "ERC721TLMerkle: Not on allowlist");
         }
         else if (!publicSaleOpen) {
-            revert("ERC721TLCore: Mint not open");
+            revert("ERC721TLMerkle: Mint not open");
         }
 
         _numMinted[msg.sender]++;

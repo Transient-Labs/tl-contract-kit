@@ -245,11 +245,11 @@ class TestMint:
         contract.setMintAllowance(1, {"from": admin})
 
     def test_mint_not_enough_ether(self, contract):
-        with brownie.reverts("ERC721TLCore: Not enough ether attached to the transaction"):
+        with brownie.reverts("ERC721TLMerkle: Not enough ether attached to the transaction"):
             contract.mint(merkleProofs[0], {"from": a[4], "value": Wei("0.99 ether")})
 
     def test_mint_closed(self, contract):
-        with brownie.reverts("ERC721TLCore: Mint not open"):
+        with brownie.reverts("ERC721TLMerkle: Mint not open"):
             contract.mint(merkleProofs[0], {"from": a[4], "value": Wei("1 ether")})
 
     def test_allowlist_sale(self, contract, admin):
@@ -260,20 +260,20 @@ class TestMint:
         assert contract.ownerOf(1) == a[4].address and contract.ownerOf(2) == a[5].address and contract.ownerOf(3) == a[6].address
 
     def test_allowlist_mint_allowance_reached(self, contract):
-        with brownie.reverts("ERC721TLCore: Mint allowance reached"):
+        with brownie.reverts("ERC721TLMerkle: Mint allowance reached"):
             contract.mint(merkleProofs[0], {"from": a[4], "value": Wei("1 ether")})
-        with brownie.reverts("ERC721TLCore: Mint allowance reached"):
+        with brownie.reverts("ERC721TLMerkle: Mint allowance reached"):
             contract.mint(merkleProofs[1], {"from": a[5], "value": Wei("1 ether")})
-        with brownie.reverts("ERC721TLCore: Mint allowance reached"):
+        with brownie.reverts("ERC721TLMerkle: Mint allowance reached"):
             contract.mint(merkleProofs[2], {"from": a[6], "value": Wei("1 ether")})
     
     def test_allowlist_mint_not_on_allowlist(self, contract):
-        with brownie.reverts("ERC721TLCore: Not on allowlist"):
+        with brownie.reverts("ERC721TLMerkle: Not on allowlist"):
             contract.mint(merkleProofs[0], {"from": a[7], "value": Wei("1 ether")})
 
     def test_allowlist_and_public_sale_open(self, contract, admin):
         contract.setPublicSaleStatus(True, {"from": admin})
-        with brownie.reverts("ERC721TLCore: Not on allowlist"):
+        with brownie.reverts("ERC721TLMerkle: Not on allowlist"):
             contract.mint(merkleProofs[0], {"from": a[7], "value": Wei("1 ether")})
 
     def test_public_sale(self, contract, admin):
@@ -284,11 +284,11 @@ class TestMint:
         assert contract.ownerOf(4) == a[7].address and contract.ownerOf(5) == a[8].address and contract.ownerOf(6) == a[9].address
 
     def test_public_sale_mint_allowance_reached(self, contract):
-        with brownie.reverts("ERC721TLCore: Mint allowance reached"):
+        with brownie.reverts("ERC721TLMerkle: Mint allowance reached"):
             contract.mint([], {"from": a[7], "value": Wei("1 ether")})
-        with brownie.reverts("ERC721TLCore: Mint allowance reached"):
+        with brownie.reverts("ERC721TLMerkle: Mint allowance reached"):
             contract.mint([], {"from": a[8], "value": Wei("1 ether")})
-        with brownie.reverts("ERC721TLCore: Mint allowance reached"):
+        with brownie.reverts("ERC721TLMerkle: Mint allowance reached"):
             contract.mint([], {"from": a[9], "value": Wei("1 ether")})
 
     def test_mint_again(self, contract, admin):
@@ -339,13 +339,13 @@ class Test_Token_Supply_Reached:
         assert contract.getRemainingSupply() == 0
     
     def test_airdrop_no_supply(self, contract, admin):
-        with brownie.reverts("ERC721TLCore: No token supply left"):
+        with brownie.reverts("ERC721TLMerkle: No token supply left"):
             contract.airdrop([a[4].address]*3, {"from": admin})
 
     def test_owner_mint_no_supply(self, contract, admin):
-        with brownie.reverts("ERC721TLCore: No token supply left"):
+        with brownie.reverts("ERC721TLMerkle: No token supply left"):
             contract.ownerMint(5, {"from": admin})
 
     def test_mint_no_supply(self, contract):
-        with brownie.reverts("ERC721TLCore: No token supply left"):
+        with brownie.reverts("ERC721TLMerkle: No token supply left"):
             contract.mint([], {"from": a[4]})

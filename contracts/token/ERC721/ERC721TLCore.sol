@@ -26,22 +26,16 @@ import "../../royalty/EIP2981AllToken.sol";
 
 contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
 
-    bool public allowlistSaleOpen;
-    bool public publicSaleOpen;
     bool public frozen;
-    uint16 public mintAllowance;
     uint256 internal _counter;
-    uint256 public mintPrice;
     uint256 public maxSupply;
     
     address payable public payoutAddress;
     address public adminAddress;
-
-    bytes32 public allowlistMerkleRoot;
     
     string internal _baseTokenURI;
 
-    mapping(address => uint16) internal _numMinted;
+    mapping(address => uint256) internal _numMinted;
 
     modifier isNotFrozen {
         require(!frozen, "ERC721TLCore: Metadata is frozen");
@@ -63,9 +57,7 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     *   @param symbol is the symbol
     *   @param royaltyRecipient is the royalty recipient
     *   @param royaltyPercentage is the royalty percentage to set
-    *   @param price is the mint price
     *   @param supply is the total token supply
-    *   @param merkleRoot is the allowlist merkle root
     *   @param admin is the admin address
     *   @param payout is the payout address
     */
@@ -74,9 +66,7 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
         string memory symbol,
         address royaltyRecipient,
         uint256 royaltyPercentage,
-        uint256 price,
         uint256 supply,
-        bytes32 merkleRoot,
         address admin,
         address payout
     )
@@ -84,27 +74,9 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
         Ownable()
         EIP2981AllToken(royaltyRecipient, royaltyPercentage)
     {
-        mintPrice = price;
         maxSupply = supply;
-        allowlistMerkleRoot = merkleRoot;
         adminAddress = admin;
         payoutAddress = payable(payout);
-    }
-
-    /**
-    *   @notice function to set the allowlist mint status
-    *   @param status is the true/false flag for the allowlist mint status
-    */
-    function setAllowlistSaleStatus(bool status) external virtual adminOrOwner {
-        allowlistSaleOpen = status;
-    }
-
-    /**
-    *   @notice function to set the public mint status
-    *   @param status is the true/false flag for the allowlist mint status
-    */
-    function setPublicSaleStatus(bool status) external virtual adminOrOwner {
-        publicSaleOpen = status;
     }
 
     /**
@@ -113,15 +85,6 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     */
     function freezeMetadata() external virtual adminOrOwner {
         frozen = true;
-    }
-
-    /**
-    *   @notice sets the mint allowance for each address
-    *   @dev requires admin or owner
-    *   @param allowance is the new allowance
-    */
-    function setMintAllowance(uint16 allowance) external virtual adminOrOwner {
-        mintAllowance = allowance;
     }
 
     /**
@@ -191,9 +154,8 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     /**
     *   @notice function to get number minted
     *   @param addr address to query
-    *   @return uint16 for number minted
     */
-    function getNumMinted(address addr) external view virtual returns (uint16) {
+    function getNumMinted(address addr) external view virtual returns (uint256) {
         return _numMinted[addr];
     }
 
