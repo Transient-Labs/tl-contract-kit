@@ -20,8 +20,9 @@
 pragma solidity >0.8.9 <0.9.0;
 
 import "../ERC721TLCore.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/security/ReentrancyGuard.sol";
 
-contract ERC721TLMerkle is ERC721TLCore {
+contract ERC721TLMerkle is ERC721TLCore, ReentrancyGuard {
 
     bool public allowlistSaleOpen;
     bool public publicSaleOpen;
@@ -60,6 +61,7 @@ contract ERC721TLMerkle is ERC721TLCore {
             admin,
             payout
         )
+        ReentrancyGuard()
     {
         mintPrice = price;
         allowlistMerkleRoot = merkleRoot;
@@ -110,7 +112,7 @@ contract ERC721TLMerkle is ERC721TLCore {
     *   @notice function for minting to the owner's address
     *   @dev requires owner or admin
     *   @dev not subject to mint allowance constraints
-    *   @dev using _mint as owner() should always be an EOA
+    *   @dev using _mint as owner() should be an EOA or at least knowlegeable if they can receive ERC721 tokens
     *   @param numToMint is the number to mint
     */
     function ownerMint(uint128 numToMint) external virtual adminOrOwner {
@@ -128,7 +130,7 @@ contract ERC721TLMerkle is ERC721TLCore {
     *   @dev using _mint as restricting all function calls to EOAs
     *   @param merkleProof is the hash for merkle proof verification
     */
-    function mint(bytes32[] calldata merkleProof) external virtual payable isEOA {
+    function mint(bytes32[] calldata merkleProof) external virtual payable nonReentrant {
         require(_counter < maxSupply, "ERC721TLMerkle: No token supply left");
         require(msg.value >= mintPrice, "ERC721TLMerkle: Not enough ether attached to the transaction");
         require(_numMinted[msg.sender] < mintAllowance, "ERC721TLMerkle: Mint allowance reached");
@@ -142,7 +144,7 @@ contract ERC721TLMerkle is ERC721TLCore {
 
         _numMinted[msg.sender]++;
         _counter++;
-        _mint(msg.sender, _counter);
+        _safeMint(msg.sender, _counter);
     }
 
 }

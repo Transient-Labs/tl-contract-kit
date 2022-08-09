@@ -109,10 +109,6 @@ class TestNonOwnerOrAdminNoAccess:
     def test_set_public_sale(self, contract):
         with brownie.reverts(self.revertStr):
             contract.setPublicSaleStatus(True, {"from": a[4]})
-    
-    def test_freeze_metadata(self, contract):
-        with brownie.reverts(self.revertStr):
-            contract.freezeMetadata({"from": a[4]})
 
     def test_set_mint_allowance(self, contract):
         with brownie.reverts(self.revertStr):
@@ -122,10 +118,6 @@ class TestNonOwnerOrAdminNoAccess:
         with brownie.reverts(self.revertStr):
             contract.setBaseURI("test", {"from": a[4]})
 
-    def test_set_royalty_info(self, contract):
-        with brownie.reverts(self.revertStr):
-            contract.setRoyaltyInfo(a[4].address, 1000, {"from": a[4]})
-
     def test_airdrop(self, contract):
         with brownie.reverts(self.revertStr):
             contract.airdrop([a[4]]*3, {"from": a[4]})
@@ -133,29 +125,6 @@ class TestNonOwnerOrAdminNoAccess:
     def test_owner_mint(self, contract):
         with brownie.reverts(self.revertStr):
             contract.ownerMint(2, {"from": a[4]})
-
-    def test_withdraw_ether(self, contract):
-        with brownie.reverts(self.revertStr):
-            contract.withdrawEther(contract.balance(), {"from": a[4]})
-
-class TestNonOwnerNoAccess:
-    revertStr = "Ownable: caller is not the owner"
-
-    def test_set_admin_address_user(self, contract):
-        with brownie.reverts(self.revertStr):
-            contract.setAdminAddress(a[4].address, {"from": a[4]})
-
-    def test_set_admin_address_admin(self, contract, admin):
-        with brownie.reverts(self.revertStr):
-            contract.setAdminAddress(a[4].address, {"from": admin})
-
-    def test_set_payout_address_user(self, contract):
-        with brownie.reverts(self.revertStr):
-            contract.setPayoutAddress(a[4].address, {"from": a[4]})
-
-    def test_set_payout_address_admin(self, contract, admin):
-        with brownie.reverts(self.revertStr):
-            contract.setPayoutAddress(a[4].address, {"from": admin})
 
 class TestAdminAccess:
     def test_set_allowlist_sale_status(self, contract, admin):
@@ -182,18 +151,6 @@ class TestAdminAccess:
         contract.setBaseURI("tests/", {"from": admin})
         assert contract.tokenURI(1) == "tests/1"
 
-    def test_set_royalty_info(self, contract, admin):
-        contract.setRoyaltyInfo(a[4].address, 1000, {"from": admin})
-        [recp, amt] = contract.royaltyInfo(1, Wei("1 ether"))
-        assert recp == a[4].address and amt == Wei(f"{1000/10000} ether")
-
-    def test_withdraw_ether(self, contract, admin):
-        contract.withdrawEther(contract.balance(), {"from": admin})
-
-    def test_freeze_metadata(self, contract, admin):
-        contract.freezeMetadata({"from": admin})
-        assert contract.frozen()
-
 class TestOwnerAccess:
     def test_set_allowlist_sale_status(self, contract, owner):
         contract.setAllowlistSaleStatus(True, {"from": owner})
@@ -218,26 +175,6 @@ class TestOwnerAccess:
     def test_set_base_uri(self, contract, owner):
         contract.setBaseURI("test/", {"from": owner})
         assert contract.tokenURI(1) == "test/1"
-
-    def test_set_royalty_info(self, contract, owner):
-        contract.setRoyaltyInfo(a[4].address, 1000, {"from": owner})
-        [recp, amt] = contract.royaltyInfo(1, Wei("1 ether"))
-        assert recp == a[4].address and amt == Wei(f"{1000/10000} ether")
-
-    def test_withdraw_ether(self, contract, owner):
-        contract.withdrawEther(contract.balance(), {"from": owner})
-
-    def test_freeze_metadata(self, contract, owner):
-        contract.freezeMetadata({"from": owner})
-        assert contract.frozen()
-
-    def test_set_admin_address(self, contract, owner):
-        contract.setAdminAddress(a[4].address, {"from": owner})
-        assert contract.adminAddress() == a[4].address
-
-    def test_set_payout_address(self, contract, owner):
-        contract.setPayoutAddress(a[4].address, {"from": owner})
-        assert contract.payoutAddress() == a[4].address
 
 class TestMint:
 
@@ -310,7 +247,7 @@ class TestMint:
         contract.setMintAllowance(1, {"from": admin})
         reenter = ERC721TLCoreMintReentrancy.deploy(contract.address, Wei("1 ether"), {"from": a[9]})
         a[9].transfer(reenter.address, "2 ether")
-        with brownie.reverts("ERC721TLCore: Function must be called by an EOA"):
+        with brownie.reverts("ReentrancyGuard: reentrant call"):
             reenter.mintToken()
 
     def test_withdraw_ether(self, contract, admin, payout):

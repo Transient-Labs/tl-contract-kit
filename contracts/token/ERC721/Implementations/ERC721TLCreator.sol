@@ -35,6 +35,11 @@ contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
         _;
     }
 
+    modifier onlyAdmin {
+        require(msg.sender == adminAddress, "ERC721TLCreator: Address not admin");
+        _;
+    }
+
     /**
     *   @param name is the name of the contract
     *   @param symbol is the symbol
@@ -58,12 +63,12 @@ contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
 
     /**
     *   @notice function to change the royalty info
-    *   @dev requires admin or owner
+    *   @dev requires owner
     *   @dev this is useful if the amount was set improperly at contract creation.
     *   @param newAddr is the new royalty payout addresss
     *   @param newPerc is the new royalty percentage, in basis points (out of 10,000)
     */
-    function setRoyaltyInfo(address newAddr, uint256 newPerc) external virtual adminOrOwner {
+    function setRoyaltyInfo(address newAddr, uint256 newPerc) external virtual onlyOwner {
         _setRoyaltyInfo(newAddr, newPerc);
     }
 
@@ -86,6 +91,14 @@ contract ERC721TLCreator is ERC721, EIP2981AllToken, Ownable {
     function setTokenURI(uint256 tokenId, string memory newURI) external virtual adminOrOwner {
         require(_exists(tokenId), "ERC721TLCreator: URI set of nonexistent token");
         _tokenURIs[tokenId] = newURI;
+    }
+
+    /**
+    *   @notice function to renounce admin rights
+    *   @dev requires admin only
+    */
+    function renounceAdmin() external virtual onlyAdmin {
+        adminAddress = address(0);
     }
 
     /**

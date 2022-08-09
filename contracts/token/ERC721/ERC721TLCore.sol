@@ -47,8 +47,8 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
         _;
     }
 
-    modifier isEOA {
-        require(msg.sender == tx.origin, "ERC721TLCore: Function must be called by an EOA");
+    modifier onlyAdmin {
+        require(msg.sender == adminAddress, "ERC721TLCore: Address not admin");
         _;
     }
 
@@ -98,12 +98,12 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
 
     /**
     *   @notice function to change the royalty info
-    *   @dev requires admin or owner
+    *   @dev requires owner
     *   @dev this is useful if the amount was set improperly at contract creation.
     *   @param newAddr is the new royalty payout addresss
     *   @param newPerc is the new royalty percentage, in basis points (out of 10,000)
     */
-    function setRoyaltyInfo(address newAddr, uint256 newPerc) external virtual adminOrOwner {
+    function setRoyaltyInfo(address newAddr, uint256 newPerc) external virtual onlyOwner {
         _setRoyaltyInfo(newAddr, newPerc);
     }
 
@@ -129,6 +129,14 @@ contract ERC721TLCore is ERC721, EIP2981AllToken, Ownable {
     function withdrawEther(uint256 amount) external virtual adminOrOwner {
         require(amount <= address(this).balance, "ERC721ATLCore: cannot withdraw more than balance");
         payoutAddress.transfer(amount);
+    }
+
+    /**
+    *   @notice function to renounce admin rights
+    *   @dev requires admin only
+    */
+    function renounceAdmin() external virtual onlyAdmin {
+        adminAddress = address(0);
     }
 
     /**

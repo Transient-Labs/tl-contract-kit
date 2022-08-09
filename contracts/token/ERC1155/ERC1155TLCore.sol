@@ -17,15 +17,16 @@
 /_/ /_/  \_,_/_//_/___/_/\__/_//_/\__/ /____/\_,_/_.__/___/ 
 */
 
-pragma solidity >0.8.9 <0.9.0;
+pragma solidity 0.8.14;
 
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/token/ERC1155/ERC1155.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/token/ERC20/IERC20.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/access/Ownable.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/security/ReentrancyGuard.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/utils/cryptography/MerkleProof.sol";
 import "../../royalty/EIP2981MultiToken.sol";
 
-contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
+contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable, ReentrancyGuard {
 
     struct TokenDetails {
         bool created;
@@ -51,8 +52,8 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
         _;
     }
 
-    modifier isEOA {
-        require(msg.sender == tx.origin, "ERC1155TLCore: Function must be called by an EOA");
+    modifier onlyAdmin {
+        require(msg.sender == adminAddress, "ERC1155TLCore: Address not admin");
         _;
     }
 
@@ -61,7 +62,11 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param payout is the payout address
     *   @param contractName is the name of the contract
     */
-    constructor(address admin, address payout, string memory contractName) ERC1155("") Ownable() {
+    constructor(address admin, address payout, string memory contractName)
+        ERC1155("")
+        Ownable() 
+        ReentrancyGuard()
+    {
         adminAddress = admin;
         payoutAddress = payable(payout);
         name = contractName;
@@ -154,24 +159,24 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
 
     /**
     *   @notice function to change the royalty recipient
-    *   @dev requires admin or owner
+    *   @dev requires owner
     *   @dev this is useful if an account gets compromised or anything like that
     *   @param tokenId is the token id to assign this address to
     *   @param newRecipient is the new royalty recipient
     */
-    function setRoyaltyRecipient(uint256 tokenId, address newRecipient) external virtual adminOrOwner {
+    function setRoyaltyRecipient(uint256 tokenId, address newRecipient) external virtual onlyOwner {
         require(_tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
         _setRoyaltyInfo(tokenId, newRecipient, _royaltyPerc[tokenId]);
     }
 
     /**
     *   @notice function to change the royalty percentage
-    *   @dev requires admin or owner
+    *   @dev requires owner
     *   @dev this is useful if the amount was set improperly at contract creation.
     *   @param tokenId is the token id
     *   @param newPerc is the new royalty percentage, in basis points (out of 10,000)
     */
-    function setRoyaltyPercentage(uint256 tokenId, uint256 newPerc) external virtual adminOrOwner {
+    function setRoyaltyPercentage(uint256 tokenId, uint256 newPerc) external virtual onlyOwner {
         require(_tokenDetails[tokenId].created, "ERC1155TLCore: Token ID not valid");
         _setRoyaltyInfo(tokenId, _royaltyAddr[tokenId], newPerc);
     }
@@ -235,6 +240,14 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     }
 
     /**
+    *   @notice function to renounce admin rights
+    *   @dev requires admin only
+    */
+    function renounceAdmin() external virtual onlyAdmin {
+        adminAddress = address(0);
+    }
+
+    /**
     *   @notice function to set the admin address on the contract
     *   @dev requires owner
     *   @param newAdmin is the new admin address
@@ -261,7 +274,7 @@ contract ERC1155TLCore is ERC1155, EIP2981MultiToken, Ownable {
     *   @param numToMint is the amount to mint
     *   @param merkleProof is the has for merkle proof verification
     */
-    function mint(uint256 tokenId, uint16 numToMint, bytes32[] calldata merkleProof) external virtual payable isEOA {
+    function mint(uint256 tokenId, uint16 numToMint, bytes32[] calldata merkleProof) external virtual payable nonReentrant {
         TokenDetails storage token = _tokenDetails[tokenId];
         require(token.created, "ERC1155TLCore: Token ID not valid");
         require(token.availableSupply >= numToMint, "ERC1155TLCore: Not enough token supply available");

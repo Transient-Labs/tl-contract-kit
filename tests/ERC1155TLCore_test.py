@@ -118,14 +118,6 @@ class TestNonOwnerAdminNoAccess:
         with brownie.reverts(self.revertStr):
             contract.setMintStatus(0, True, {"from": a[4]})
 
-    def test_set_royalty_recipient(self, contract):
-        with brownie.reverts(self.revertStr):
-            contract.setRoyaltyRecipient(0, a[4].address, {"from": a[4]})
-
-    def test_set_royalty_percentage(self, contract):
-        with brownie.reverts(self.revertStr):
-            contract.setRoyaltyPercentage(0, 1000, {"from": a[4]})
-
     def test_airdrop(self, contract):
         with brownie.reverts(self.revertStr):
             contract.airdrop(0, [a[4].address]*3, {"from": a[4]})
@@ -142,8 +134,33 @@ class TestNonOwnerAdminNoAccess:
         with brownie.reverts(self.revertStr):
             contract.withdrawEther(contract.balance(), {"from": a[4]})
 
+class TestNonAdminAccess:
+    def test_renounce_admin_user(self, contract):
+        with brownie.reverts("ERC1155TLCore: Address not admin"):
+            contract.renounceAdmin({"from": a[4]})
+
+    def test_renounce_admin_owner(self, contract, owner):
+        with brownie.reverts("ERC1155TLCore: Address not admin"):
+            contract.renounceAdmin({"from": owner})
+
 class TestNonOwnerNoAccess:
     revertStr = "Ownable: caller is not the owner"
+
+    def test_set_royalty_recipient_user(self, contract):
+        with brownie.reverts(self.revertStr):
+            contract.setRoyaltyRecipient(0, a[4].address, {"from": a[4]})
+
+    def test_set_royalty_percentage_user(self, contract):
+        with brownie.reverts(self.revertStr):
+            contract.setRoyaltyPercentage(0, 1000, {"from": a[4]})
+
+    def test_set_royalty_recipient_admin(self, contract, admin):
+        with brownie.reverts(self.revertStr):
+            contract.setRoyaltyRecipient(0, a[4].address, {"from": admin})
+
+    def test_set_royalty_percentage_admin(self, contract, admin):
+        with brownie.reverts(self.revertStr):
+            contract.setRoyaltyPercentage(0, 1000, {"from": admin})
 
     def test_set_admin_address_user(self, contract):
         with brownie.reverts(self.revertStr):
@@ -194,16 +211,6 @@ class TestAdminAccess:
         contract.setMintStatus(0, True, {"from": admin})
         assert contract.getMintStatus(0)
 
-    def test_set_royalty_recipient(self, contract, admin):
-        contract.setRoyaltyRecipient(0, admin.address, {"from": admin})
-        [recp, amt] = contract.royaltyInfo(0, Wei("1 ether"))
-        assert recp == admin.address
-
-    def test_set_royalty_percentage(self, contract, admin):
-        contract.setRoyaltyPercentage(0, 1000, {"from": admin})
-        [recp, amt] = contract.royaltyInfo(0, Wei("1 ether"))
-        assert amt == Wei(f"{1000/10000} ether")
-
     def test_airdrop(self, contract, admin):
         contract.airdrop(0, [admin.address]*3, {"from": admin})
         assert contract.balanceOf(admin.address, 0) == 3
@@ -217,6 +224,10 @@ class TestAdminAccess:
 
     def test_withdraw_ether(self, contract, admin):
         contract.withdrawEther(contract.balance(), {"from": admin})
+
+    def test_renounce_admin(self, contract, admin):
+        contract.renounceAdmin({"from": admin})
+        assert contract.adminAddress() == f"0x{bytes(20).hex()}"
 
 class TestOwnerAccess:
     def test_create_token(self, contract, owner, token1):
@@ -261,6 +272,14 @@ class TestOwnerAccess:
         [recp, amt] = contract.royaltyInfo(1, Wei("1 ether"))
         assert amt == Wei(f"{1000/10000} ether")
 
+    def test_set_admin_address(self, contract, owner):
+        contract.setAdminAddress(a[4].address, {"from": owner})
+        assert contract.adminAddress() == a[4].address
+
+    def test_set_payout_address(self, contract, owner):
+        contract.setPayoutAddress(a[5].address, {"from": owner})
+        assert contract.payoutAddress() == a[5].address
+
     def test_airdrop(self, contract, admin, owner):
         contract.airdrop(1, [admin.address]*3, {"from": owner})
         assert contract.balanceOf(admin.address, 1) == 3
@@ -294,13 +313,13 @@ class TestNonExistentTokenId:
         with brownie.reverts(self.revertStr):
             contract.setMintStatus(0, True, {"from": admin})
 
-    def test_set_royalty_recipient(self, contract, admin):
+    def test_set_royalty_recipient(self, contract, owner):
         with brownie.reverts(self.revertStr):
-            contract.setRoyaltyRecipient(0, admin.address, {"from": admin})
+            contract.setRoyaltyRecipient(0, owner.address, {"from": owner})
 
-    def test_set_royalty_percentage(self, contract, admin):
+    def test_set_royalty_percentage(self, contract, owner):
         with brownie.reverts(self.revertStr):
-            contract.setRoyaltyPercentage(0, 1000, {"from": admin})
+            contract.setRoyaltyPercentage(0, 1000, {"from": owner})
 
     def test_airdrop(self, contract, admin):
         with brownie.reverts(self.revertStr):
@@ -548,5 +567,5 @@ class TestReentrancy:
         reenter = ERC1155TLCoreMintReentrancy.deploy(contract.address, token2[4], 2, {"from": a[4]})
         a[4].transfer(reenter, "5 ether")
 
-        with brownie.reverts("ERC1155TLCore: Function must be called by an EOA"):
+        with brownie.reverts("ReentrancyGuard: reentrant call"):
             reenter.mintToken({"from": a[4]})

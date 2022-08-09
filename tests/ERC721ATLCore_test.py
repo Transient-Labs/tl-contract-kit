@@ -85,10 +85,6 @@ class TestNonOwnerOrAdminNoAccess:
         with brownie.reverts(self.revertStr):
             contract.setBaseURI("test", {"from": a[4]})
 
-    def test_set_royalty_info(self, contract):
-        with brownie.reverts(self.revertStr):
-            contract.setRoyaltyInfo(a[4].address, 1000, {"from": a[4]})
-
     def test_withdraw_erc20(self, contract, token):
         with brownie.reverts(self.revertStr):
             contract.withdrawERC20(token.address, token.balanceOf(contract.address), {"from": a[4]})
@@ -99,6 +95,14 @@ class TestNonOwnerOrAdminNoAccess:
 
 class TestNonOwnerNoAccess:
     revertStr = "Ownable: caller is not the owner"
+
+    def test_set_royalty_info_user(self, contract):
+        with brownie.reverts(self.revertStr):
+            contract.setRoyaltyInfo(a[4].address, 1000, {"from": a[4]})
+
+    def test_set_royalty_info_admin(self, contract, admin):
+        with brownie.reverts(self.revertStr):
+            contract.setRoyaltyInfo(a[4].address, 1000, {"from": admin})
 
     def test_set_admin_address_user(self, contract):
         with brownie.reverts(self.revertStr):
@@ -116,14 +120,18 @@ class TestNonOwnerNoAccess:
         with brownie.reverts(self.revertStr):
             contract.setPayoutAddress(a[4].address, {"from": admin})
 
+class TestNonAdminAccess:
+    def test_renounce_admin_user(self, contract):
+        with brownie.reverts("ERC721ATLCore: Address not admin"):
+            contract.renounceAdmin({"from": a[4]})
+
+    def test_renounce_admin_owner(self, contract, owner):
+        with brownie.reverts("ERC721ATLCore: Address not admin"):
+            contract.renounceAdmin({"from": owner})
+
 class TestAdminAccess:
     def test_set_base_uri(self, contract, admin):
         contract.setBaseURI("tests/", {"from": admin})
-
-    def test_set_royalty_info(self, contract, admin):
-        contract.setRoyaltyInfo(a[4].address, 1000, {"from": admin})
-        [recp, amt] = contract.royaltyInfo(1, Wei("1 ether"))
-        assert recp == a[4].address and amt == Wei(f"{1000/10000} ether")
 
     def test_withdraw_erc20(self, contract, admin, token):
         contract.withdrawERC20(token.address, token.balanceOf(contract.address), {"from": admin})
@@ -134,6 +142,10 @@ class TestAdminAccess:
     def test_freeze_metadata(self, contract, admin):
         contract.freezeMetadata({"from": admin})
         assert contract.frozen()
+        
+    def test_renounce_admin(self, contract, admin):
+        contract.renounceAdmin({"from": admin})
+        assert contract.adminAddress() == f"0x{bytes(20).hex()}"
 
 class TestOwnerAccess:
     def test_set_base_uri(self, contract, owner):

@@ -53,10 +53,6 @@ class TestSetup:
 class TestNonOwnerAdminNoAccess:
     revertStr = "ERC721TLCreator: Address not admin or owner"
 
-    def test_set_royalty_info(self, contract):
-        with brownie.reverts(self.revertStr):
-            contract.setRoyaltyInfo(a[4].address, 5000, {"from": a[4]})
-
     def test_mint(self, contract):
         with brownie.reverts(self.revertStr):
             contract.mint("testMint", {"from": a[4]})    
@@ -68,6 +64,14 @@ class TestNonOwnerAdminNoAccess:
 class TestNonOwnerNoAccess:
     revertStr = "Ownable: caller is not the owner"
 
+    def test_set_royalty_info_user(self, contract):
+        with brownie.reverts(self.revertStr):
+            contract.setRoyaltyInfo(a[4].address, 1000, {"from": a[4]})
+
+    def test_set_royalty_info_admin(self, contract, admin):
+        with brownie.reverts(self.revertStr):
+            contract.setRoyaltyInfo(a[4].address, 1000, {"from": admin})
+
     def test_set_admin_address_user(self, contract):
         with brownie.reverts(self.revertStr):
             contract.setAdminAddress(a[4].address, {"from": a[4]})
@@ -76,11 +80,16 @@ class TestNonOwnerNoAccess:
         with brownie.reverts(self.revertStr):
             contract.setAdminAddress(a[4].address, {"from": admin})
 
+class TestNonAdminAccess:
+    def test_renounce_admin_user(self, contract):
+        with brownie.reverts("ERC721TLCreator: Address not admin"):
+            contract.renounceAdmin({"from": a[4]})
+
+    def test_renounce_admin_owner(self, contract, owner):
+        with brownie.reverts("ERC721TLCreator: Address not admin"):
+            contract.renounceAdmin({"from": owner})
+
 class TestAdminAccess:
-    def test_royalty_info(self, contract, admin):
-        contract.setRoyaltyInfo(a[4].address, 700, {"from": admin})
-        [recp, amt] = contract.royaltyInfo(1, "1 ether")
-        assert recp == a[4].address and amt == Wei(f"{700/10000} ether")
 
     def test_mint(self, contract, admin):
         contract.mint("tests", {"from": admin})
@@ -89,6 +98,10 @@ class TestAdminAccess:
     def test_set_token_uri(self, contract, admin):
         contract.setTokenURI(1, "testtest", {"from": admin})
         assert contract.tokenURI(1) == "testtest"
+
+    def test_renounce_admin(self, contract, admin):
+        contract.renounceAdmin({"from": admin})
+        assert contract.adminAddress() == f"0x{bytes(20).hex()}"
 
 class TestOwnerAccess:
     def test_royalty_info(self, contract, owner):
@@ -114,15 +127,15 @@ class TestOwnerAccess:
         assert contract.adminAddress() == a[4].address
 
 class TestReverts:
-    def test_set_royalty_info(self, contract, admin):
+    def test_set_royalty_info(self, contract, owner):
         with brownie.reverts("EIP2981AllToken: Cannot set royalty percentage above 10000"):
-            contract.setRoyaltyInfo(a[4].address, 10000, {"from": admin})
+            contract.setRoyaltyInfo(a[4].address, 10000, {"from": owner})
 
     def test_set_token_uri(self, contract, admin):
         with brownie.reverts("ERC721TLCreator: URI set of nonexistent token"):
             contract.setTokenURI(1, "test", {"from": admin})
 
-    def test_set_token_uri(self, contract):
+    def test_get_token_uri(self, contract):
         with brownie.reverts("ERC721TLCreator: URI query for nonexistent token"):
             contract.tokenURI(1)
 

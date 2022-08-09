@@ -20,8 +20,9 @@
 pragma solidity >0.8.9 <0.9.0;
 
 import "../ERC721ATLCore.sol";
+import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/security/ReentrancyGuard.sol";
 
-contract ERC721ATLMerkle is ERC721ATLCore {
+contract ERC721ATLMerkle is ERC721ATLCore, ReentrancyGuard {
 
     bool public allowlistSaleOpen;
     bool public publicSaleOpen;
@@ -60,6 +61,7 @@ contract ERC721ATLMerkle is ERC721ATLCore {
             admin,
             payout
         )
+        ReentrancyGuard()
     {
         mintPrice = price;
         allowlistMerkleRoot = merkleRoot;
@@ -107,7 +109,8 @@ contract ERC721ATLMerkle is ERC721ATLCore {
     /**
     *   @notice function for minting to the owner's address
     *   @dev requires owner or admin
-    *   @dev not subject to mint allowance constraints
+    *   @dev not subject to per-wallet mint allowance constraints
+    *   @dev owner() should be an address capable of receiving ERC721 tokens
     *   @param numToMint is the number to mint
     */
     function ownerMint(uint128 numToMint) external virtual adminOrOwner {
@@ -118,12 +121,10 @@ contract ERC721ATLMerkle is ERC721ATLCore {
     /**
     *   @notice function for users to mint
     *   @dev requires payment
-    *   @dev only mint one at a time. If looking to mint more than one at a time, utilize ERC721TLMultiMint
-    *   @dev using _mint as restricting all function calls to EOAs
     *   @param numToMint is the number to mint
     *   @param merkleProof is the hash for merkle proof verification
     */
-    function mint(uint256 numToMint, bytes32[] calldata merkleProof) external virtual payable isEOA {
+    function mint(uint256 numToMint, bytes32[] calldata merkleProof) external virtual payable nonReentrant {
         require(_totalMinted() + numToMint <= maxSupply, "ERC721ATLMerkle: No token supply left");
         require(msg.value >= mintPrice * numToMint, "ERC721ATLMerkle: Not enough ether attached to the transaction");
         require(_numberMinted(msg.sender) + numToMint <= mintAllowance, "ERC721ATLMerkle: Mint allowance reached");
@@ -135,6 +136,6 @@ contract ERC721ATLMerkle is ERC721ATLCore {
             revert("ERC721ATLMerkle: Mint not open");
         }
 
-        _mint(msg.sender, numToMint);
+        _safeMint(msg.sender, numToMint);
     }
 }
