@@ -102,13 +102,25 @@ class TestViewFunctions:
 class TestNonOwnerOrAdminNoAccess:
     revertStr = "ERC721TLCore: Address not admin or owner"
 
-    def test_set_allowlist_sale(self, contract):
+    def test_open_allowlist_sale(self, contract):
         with brownie.reverts(self.revertStr):
-            contract.setAllowlistSaleStatus(True, {"from": a[4]})
+            contract.openAllowlistSale({"from": a[4]})
 
-    def test_set_public_sale(self, contract):
+    def test_open_public_sale(self, contract):
         with brownie.reverts(self.revertStr):
-            contract.setPublicSaleStatus(True, {"from": a[4]})
+            contract.openPublicSale({"from": a[4]})
+
+    def test_close_sales(self, contract):
+        with brownie.reverts(self.revertStr):
+            contract.closeSales({"from": a[4]})
+
+    def test_set_merkle_root(self, contract):
+        with brownie.reverts(self.revertStr):
+            contract.setAllowlistMerkleRoot(bytes(32), {"from": a[4]})
+
+    def test_set_mint_price(self, contract):
+        with brownie.reverts(self.revertStr):
+            contract.setMintPrice(0, {"from": a[4]})
 
     def test_set_mint_allowance(self, contract):
         with brownie.reverts(self.revertStr):
@@ -127,13 +139,25 @@ class TestNonOwnerOrAdminNoAccess:
             contract.ownerMint(2, {"from": a[4]})
 
 class TestAdminAccess:
-    def test_set_allowlist_sale_status(self, contract, admin):
-        contract.setAllowlistSaleStatus(True, {"from": admin})
-        assert contract.allowlistSaleOpen()
+    def test_open_allowlist_sale(self, contract, admin):
+        contract.openAllowlistSale({"from": admin})
+        assert contract.allowlistSaleOpen() and not contract.publicSaleOpen()
 
-    def test_set_public_sale_status(self, contract, admin):
-        contract.setPublicSaleStatus(True, {"from": admin})
-        assert contract.publicSaleOpen()
+    def test_open_public_sale_(self, contract, admin):
+        contract.openPublicSale({"from": admin})
+        assert contract.publicSaleOpen() and not contract.allowlistSaleOpen()
+
+    def test_close_sales(self, contract, admin):
+        contract.closeSales({"from": admin})
+        assert not contract.publicSaleOpen() and not contract.allowlistSaleOpen()
+
+    def test_set_merkle_root(self, contract, admin):
+        contract.setAllowlistMerkleRoot(bytes(32), {"from": admin})
+        assert contract.allowlistMerkleRoot() == f"0x{bytes(32).hex()}"
+    
+    def test_set_mint_price(self, contract, admin):
+        contract.setMintPrice(0, {"from": admin})
+        assert contract.mintPrice() == 0
 
     def test_set_mint_allowance(self, contract, admin):
         contract.setMintAllowance(2, {"from": admin})
@@ -152,13 +176,25 @@ class TestAdminAccess:
         assert contract.tokenURI(1) == "tests/1"
 
 class TestOwnerAccess:
-    def test_set_allowlist_sale_status(self, contract, owner):
-        contract.setAllowlistSaleStatus(True, {"from": owner})
-        assert contract.allowlistSaleOpen()
+    def test_open_allowlist_sale(self, contract, owner):
+        contract.openAllowlistSale({"from": owner})
+        assert contract.allowlistSaleOpen() and not contract.publicSaleOpen()
 
-    def test_set_public_sale_status(self, contract, owner):
-        contract.setPublicSaleStatus(True, {"from": owner})
-        assert contract.publicSaleOpen()
+    def test_open_public_sale_(self, contract, owner):
+        contract.openPublicSale({"from": owner})
+        assert contract.publicSaleOpen() and not contract.allowlistSaleOpen()
+
+    def test_close_sales(self, contract, owner):
+        contract.closeSales({"from": owner})
+        assert not contract.publicSaleOpen() and not contract.allowlistSaleOpen()
+
+    def test_set_merkle_root(self, contract, owner):
+        contract.setAllowlistMerkleRoot(bytes(32), {"from": owner})
+        assert contract.allowlistMerkleRoot() == f"0x{bytes(32).hex()}"
+    
+    def test_set_mint_price(self, contract, owner):
+        contract.setMintPrice(0, {"from": owner})
+        assert contract.mintPrice() == 0
 
     def test_set_mint_allowance(self, contract, owner):
         contract.setMintAllowance(2, {"from": owner})
@@ -190,7 +226,7 @@ class TestMint:
             contract.mint(merkleProofs[0], {"from": a[4], "value": Wei("1 ether")})
 
     def test_allowlist_sale(self, contract, admin):
-        contract.setAllowlistSaleStatus(True, {"from": admin})
+        contract.openAllowlistSale({"from": admin})
         contract.mint(merkleProofs[0], {"from": a[4], "value": Wei("1 ether")})
         contract.mint(merkleProofs[1], {"from": a[5], "value": Wei("1 ether")})
         contract.mint(merkleProofs[2], {"from": a[6], "value": Wei("1 ether")})
@@ -208,13 +244,8 @@ class TestMint:
         with brownie.reverts("ERC721TLMerkle: Not on allowlist"):
             contract.mint(merkleProofs[0], {"from": a[7], "value": Wei("1 ether")})
 
-    def test_allowlist_and_public_sale_open(self, contract, admin):
-        contract.setPublicSaleStatus(True, {"from": admin})
-        with brownie.reverts("ERC721TLMerkle: Not on allowlist"):
-            contract.mint(merkleProofs[0], {"from": a[7], "value": Wei("1 ether")})
-
     def test_public_sale(self, contract, admin):
-        contract.setAllowlistSaleStatus(False, {"from": admin})
+        contract.openPublicSale({"from": admin})
         contract.mint([], {"from": a[7], "value": Wei("1 ether")})
         contract.mint([], {"from": a[8], "value": Wei("1 ether")})
         contract.mint([], {"from": a[9], "value": Wei("1 ether")})

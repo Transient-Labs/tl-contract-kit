@@ -17,7 +17,7 @@
 /_/ /_/  \_,_/_//_/___/_/\__/_//_/\__/ /____/\_,_/_.__/___/ 
 */
 
-pragma solidity >0.8.9 <0.9.0;
+pragma solidity 0.8.14;
 
 import "../ERC721TLCore.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/security/ReentrancyGuard.sol";
@@ -67,20 +67,28 @@ contract ERC721TLMerkle is ERC721TLCore, ReentrancyGuard {
         allowlistMerkleRoot = merkleRoot;
     }
 
-     /**
-    *   @notice function to set the allowlist mint status
-    *   @param status is the true/false flag for the allowlist mint status
+    /**
+    *   @notice function to open the allowlist sale
     */
-    function setAllowlistSaleStatus(bool status) external virtual adminOrOwner {
-        allowlistSaleOpen = status;
+    function openAllowlistSale() external virtual adminOrOwner {
+        allowlistSaleOpen = true;
+        publicSaleOpen = false;
     }
 
     /**
-    *   @notice function to set the public mint status
-    *   @param status is the true/false flag for the allowlist mint status
+    *   @notice function to open the public sale
     */
-    function setPublicSaleStatus(bool status) external virtual adminOrOwner {
-        publicSaleOpen = status;
+    function openPublicSale() external virtual adminOrOwner {
+        allowlistSaleOpen = false;
+        publicSaleOpen = true;
+    }
+
+    /**
+    *   @notice function to close both sales
+    */
+    function closeSales() external virtual adminOrOwner {
+        allowlistSaleOpen = false;
+        publicSaleOpen = false;
     }
 
     /**
@@ -90,6 +98,24 @@ contract ERC721TLMerkle is ERC721TLCore, ReentrancyGuard {
     */
     function setMintAllowance(uint16 allowance) external virtual adminOrOwner {
         mintAllowance = allowance;
+    }
+
+    /**
+    *   @notice function to set the merkle root
+    *   @dev requires admin or owner
+    *   @param newRoot is the new merkle root
+    */
+    function setAllowlistMerkleRoot(bytes32 newRoot) external adminOrOwner {
+        allowlistMerkleRoot = newRoot;
+    }
+
+    /**
+    *   @notice function to set the mint price
+    *   @dev requires admin or owner
+    *   @param newPrice is the new mint price
+    */
+    function setMintPrice(uint256 newPrice) external adminOrOwner {
+        mintPrice = newPrice;
     }
 
     /**
