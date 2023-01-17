@@ -16,7 +16,7 @@
 /_/ /_/  \_,_/_//_/___/_/\__/_//_/\__/ /____/\_,_/_.__/___/ 
 */
 
-pragma solidity 0.8.14;
+pragma solidity 0.8.17;
 
 import "chiru-labs/ERC721A@4.1.0/contracts/ERC721A.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/token/ERC20/IERC20.sol";

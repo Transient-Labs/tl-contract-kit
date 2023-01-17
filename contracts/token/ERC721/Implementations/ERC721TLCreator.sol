@@ -17,7 +17,7 @@
 /_/ /_/  \_,_/_//_/___/_/\__/_//_/\__/ /____/\_,_/_.__/___/ 
 */
 
-pragma solidity 0.8.14;
+pragma solidity 0.8.17;
 
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/token/ERC721/ERC721.sol";
 import "OpenZeppelin/openzeppelin-contracts@4.7.0/contracts/access/Ownable.sol";

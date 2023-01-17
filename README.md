@@ -1,5 +1,7 @@
 # Transient Labs Smart Contract Kit
 
+## THIS REPO IS NOT COMPATIBLE WITH ANY PROJECTS CREATED WITH FOUNDRY. THIS REPO IS REACHING END OF LIFE. COMPATIBLE WITH STORY VERSION 1.0.0 AND BLOCKLIST 1.0.0. CONSULT MARCO PEYFUSS FOR DETAILS ON HOW TO IMPLEMENT THOSE.
+
 This repository is meant to serve as an inheritable library of smart contracts. Development uses the eth-brownie framework (https://github.com/eth-brownie/brownie)
 
 ## Contracts
